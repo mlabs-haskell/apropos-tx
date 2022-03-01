@@ -132,3 +132,5 @@ intPermutationGenSelfTests =
         True
         (\(_ :: Morphism IntProp Int) -> True)
         baseGen
+
+
