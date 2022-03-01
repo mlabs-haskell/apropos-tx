@@ -4,21 +4,36 @@ module Apropos.TxArr (
   ) where
 import Plutarch
 import Plutarch.Prelude
+import Plutarch.Api.V1
 
-data TxArr s a b =
+data TxArr a b s a' b' =
   TxArr {
-    arr :: Term s a -> Term s b
-  , con :: Term s (a :--> b :--> PUnit)
+    arr :: a -> b
+  , coerceIn  :: Term s a' -> a
+  , coerceOut :: b -> Term s b'
+  , con :: Term s (a' :--> b' :--> PUnit)
   }
 
+liftTxArr :: TxArr a b s a' b' -> Term s a' -> Term s b'
+liftTxArr x = (coerceOut x) . (arr x) . (coerceIn x)
 
-(>>>>) :: forall s a b c . TxArr s a b -> TxArr s b c -> TxArr s a c
-(>>>>) x y = TxArr ((arr y) . (arr x)) (ccomp (con x) (con y))
+(>>>>) :: forall a b c s a' b' c' . TxArr a b s a' b' -> TxArr b c s b' c' -> TxArr a c s a' c'
+(>>>>) x y = TxArr {
+               arr = ((arr y) . (arr x))
+             , coerceIn = coerceIn x
+             , coerceOut = coerceOut y
+             , con = (ccomp (con x) (con y))
+             }
   where
-    ccomp :: Term s (a :--> b :--> PUnit)
-          -> Term s (b :--> c :--> PUnit)
-          -> Term s (a :--> c :--> PUnit)
+    ccomp :: Term s (a' :--> b' :--> PUnit)
+          -> Term s (b' :--> c' :--> PUnit)
+          -> Term s (a' :--> c' :--> PUnit)
     ccomp xp yp = plam $ \a' ->
                      plam $ \c' ->
-                          (papp (papp xp a') ((arr x) a'))
-                       <> (papp (papp yp ((arr x) a')) c')
+                          (papp (papp xp a') ((liftTxArr x) a'))
+                       <> (papp (papp yp ((liftTxArr x) a')) c')
+
+(<++>) :: forall a b c d s a' b' c' d' .
+   TxArr a b s a' b' -> TxArr c d s c' d' -> TxArr (a,c) (b,d) s (PTuple a' c') (PTuple b' d')
+(<++>) _ _ = undefined
+
