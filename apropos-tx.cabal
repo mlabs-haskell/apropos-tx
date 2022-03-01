@@ -79,6 +79,7 @@ library
                  , Apropos.Pure
                  , Apropos.Script
                  , Apropos.Tx
+                 , Apropos.TxArr
   hs-source-dirs:  src
 
 test-suite examples
