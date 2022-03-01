@@ -19,7 +19,7 @@ liftTxArr :: TxArr a b s a' b' -> Term s a' -> Term s b'
 liftTxArr x = (coerceOut x) . (arr x) . (coerceIn x)
 
 und :: Term s PUnit -> Term s PUnit -> Term s PUnit
-und x y = papp (papp (plam $ \_ -> plam $ \_ -> pcon PUnit) x) y
+und x y = papp (papp (plam $ \_a _b -> pcon PUnit) x) y
 
 (>>>>) :: forall a b c s a' b' c' . TxArr a b s a' b' -> TxArr b c s b' c' -> TxArr a c s a' c'
 (>>>>) x y = TxArr {
