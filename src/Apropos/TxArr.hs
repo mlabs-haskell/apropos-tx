@@ -9,21 +9,24 @@ import Plutarch.Api.V1
 
 data TxArr a b s a' b' =
   TxArr {
-    arr :: a -> b
+    arr :: a -> Maybe b
   , coerceIn  :: Term s a' -> a
   , coerceOut :: b -> Term s b'
   , con :: Term s (a' :--> b' :--> PUnit)
   }
 
 liftTxArr :: TxArr a b s a' b' -> Term s a' -> Term s b'
-liftTxArr x = (coerceOut x) . (arr x) . (coerceIn x)
+liftTxArr x t = case (arr x) $ (coerceIn x) t of
+                  Just so -> (coerceOut x) so
+                  Nothing -> perror
 
+-- this should be Semigroup.<>
 und :: Term s PUnit -> Term s PUnit -> Term s PUnit
 und x y = papp (papp (plam $ \_a _b -> pcon PUnit) x) y
 
 (>>>>) :: forall a b c s a' b' c' . TxArr a b s a' b' -> TxArr b c s b' c' -> TxArr a c s a' c'
 (>>>>) x y = TxArr {
-               arr = ((arr y) . (arr x))
+               arr = \i -> (arr x) i >>= arr y
              , coerceIn = coerceIn x
              , coerceOut = coerceOut y
              , con = (ccomp (con x) (con y))
