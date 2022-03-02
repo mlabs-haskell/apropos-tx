@@ -13,6 +13,8 @@ data TxArr a b s a' b' =
     -- arr is a specification for how the constraint should behave
     -- (in the constraint emitting model this is "pulls back" free variables such
     -- that the emitted constraints have at most a single solution b)
+    -- a is the input + information required to fully constrain an output to a single solution
+    -- b is the output
     arr :: a -> Maybe b
   , coerceIn  :: Term s a' -> a
   , coerceOut :: b -> Term s b'
