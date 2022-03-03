@@ -57,14 +57,13 @@ data TxArrow f t s a b =
   TxArrow {
     txArrow :: f -> Maybe t
   , constraint :: Constraint s a b
-  , flens :: Getter Tx (Maybe f)
-  , tlens :: Getter [TxOut] (Maybe t)
+  , fget :: Getter Tx (Maybe f)         -- these getters should be a DSL that can be
+  , tget :: Getter [TxOut] (Maybe t)    -- interpreted as a Lens.Getter or a Plutarch.Getter
   , fiso :: Iso' f (Term s a)
-  , tiso :: Iso' t (Term s b)
-  } -- this must morally obey the laws of Iso (f -> Mayb t) (Constraint s a b)
-    -- we don't enforce it with this type though we will check it with stochastic search
-    -- txArrow is a specification for constraint
-    -- that gets checked by a generated test suite
+  , tiso :: Iso' t (Term s b)           -- these ISOs translate between the arr model and constraint
+  }
+  -- TxArrow must morally obey the laws of Iso (f -> Maybe t) (Constraint s a b)
+  -- we don't enforce it with this type though we will check it with stochastic search
 
 -- sequential arrow composition
 (>>>>) :: forall from via to s a b c .
@@ -74,8 +73,8 @@ data TxArrow f t s a b =
 (>>>>) x y = TxArrow
              { txArrow  = txArrow x >=> txArrow y
              , constraint = txArrowConstraint x y
-             , flens = flens x
-             , tlens = tlens y
+             , fget = fget x
+             , tget = tget y
              , fiso = fiso x
              , tiso = tiso y
              }
@@ -88,8 +87,8 @@ data TxArrow f t s a b =
 (<++>) x y = TxArrow
              { txArrow = \(a, b) -> (,) <$> (txArrow x) a <*> (txArrow y) b
              , constraint = constraint x <&&> constraint y
-             , flens = to $ \tx -> (,) <$> tx ^. (flens x) <*> tx ^. (flens y)
-             , tlens = to $ \tx -> (,) <$> tx ^. (tlens x) <*> tx ^. (tlens y)
+             , fget = to $ \tx -> (,) <$> tx ^. (fget x) <*> tx ^. (fget y)
+             , tget = to $ \tx -> (,) <$> tx ^. (tget x) <*> tx ^. (tget y)
              , fiso = pariso (fiso x) (fiso y)
              , tiso = pariso (tiso x) (tiso y)
              }
