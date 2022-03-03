@@ -23,6 +23,25 @@ import Control.Monad ((>=>))
 ---- we can use the arrow corepresentations to define search routines that look for error conditions
 ---- these could be things specified by the TxSpecs - contracts not being obeyed
 ---- or protocol level bugs like unconsumable outputs
+--
+-- protocol "MyProtocol" $ do
+--   tx "MyAction" $ do
+--     txtmp "CheckTheFees" $ do
+--       txarr checkFeeA
+--       txarr checkFeeB
+--     txtmp "CheckTheAction" $ do
+--       txarr checkTheAction
+--   tx "MyOtherAction $ do
+--     txtmp "CheckTheFees" $ do
+--       txarr checkFeeA
+--       txarr checkFeeB
+--       txarr checkFeeC
+--     txtmp "CheckTheOtherAction" $ do
+--       txarr checkTheAction
+--   tx "EndMyProtocol" $ do
+--     txtmp "CheckTheEndCondition" $ do
+--       txarr checkTheEndCondition
+
 
 type Protocol = [TxSpec]
 
