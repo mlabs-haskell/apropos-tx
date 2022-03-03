@@ -57,8 +57,8 @@ data TxArrow f t s a b =
   TxArrow {
     txArrow :: f -> Maybe t
   , constraint :: Constraint s a b
-  , flens :: Getter Tx f
-  , tlens :: Getter [TxOut] t
+  , flens :: Getter Tx (Maybe f)
+  , tlens :: Getter [TxOut] (Maybe t)
   , fiso :: Iso' f (Term s a)
   , tiso :: Iso' t (Term s b)
   } -- this must morally obey the laws of Iso (f -> Mayb t) (Constraint s a b)
@@ -88,8 +88,8 @@ data TxArrow f t s a b =
 (<++>) x y = TxArrow
              { txArrow = \(a, b) -> (,) <$> (txArrow x) a <*> (txArrow y) b
              , constraint = constraint x <&&> constraint y
-             , flens = to $ \tx -> (tx ^. (flens x), tx ^. (flens y))
-             , tlens = to $ \tx -> (tx ^. (tlens x), tx ^. (tlens y))
+             , flens = to $ \tx -> (,) <$> tx ^. (flens x) <*> tx ^. (flens y)
+             , tlens = to $ \tx -> (,) <$> tx ^. (tlens x) <*> tx ^. (tlens y)
              , fiso = pariso (fiso x) (fiso y)
              , tiso = pariso (tiso x) (tiso y)
              }
