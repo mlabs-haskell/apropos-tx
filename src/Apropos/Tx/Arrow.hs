@@ -9,7 +9,7 @@ module Apropos.Tx.Arrow (
   ) where
 import Apropos.Tx.Constraint
 import Prelude hiding ((<>))
-import Plutus.V1.Ledger.Tx (Tx)
+import Plutus.V1.Ledger.Tx (Tx,TxOut)
 import Plutarch
 import Plutarch.Prelude
 import Control.Lens
@@ -58,7 +58,7 @@ data TxArrow f t s a b =
     txArrow :: f -> Maybe t
   , constraint :: Constraint s a b
   , flens :: Getter Tx f
-  , tlens :: Getter Tx t
+  , tlens :: Getter [TxOut] t
   , fiso :: Iso' f (Term s a)
   , tiso :: Iso' t (Term s b)
   } -- this must morally obey the laws of Iso (f -> Mayb t) (Constraint s a b)
