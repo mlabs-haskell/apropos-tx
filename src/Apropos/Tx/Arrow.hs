@@ -7,7 +7,6 @@ module Apropos.Tx.Arrow (
   (>>>>),
   (<++>),
   ) where
-import Apropos.Tx.Constraint
 import Prelude hiding ((<>))
 import Plutus.V1.Ledger.Tx (Tx,TxOut)
 import Plutarch
@@ -47,8 +46,12 @@ type Protocol = [TxSpec]
 
 type TxSpec = [ClosedTxArrow]
 
+
+type Arrow s a b = Term s (a :--> b :--> PUnit)
+
 data ClosedTxArrow where
   ClosedTxArrow :: forall f t s a b . TxArrow f t s a b -> ClosedTxArrow
+
 
 -- TxArrows compose sequentially
 -- from one state to the next
@@ -56,13 +59,13 @@ data ClosedTxArrow where
 data TxArrow f t s a b =
   TxArrow {
     txArrow :: f -> Maybe t
-  , constraint :: Constraint s a b
+  , constraint :: Arrow s a b
   , fget :: Getter Tx (Maybe f)         -- these getters should be a DSL that can be
   , tget :: Getter [TxOut] (Maybe t)    -- interpreted as a Lens.Getter or a Plutarch.Getter
   , fiso :: Iso' f (Term s a)
   , tiso :: Iso' t (Term s b)           -- these ISOs translate between the arr model and constraint
   }
-  -- TxArrow must morally obey the laws of Iso (f -> Maybe t) (Constraint s a b)
+  -- TxArrow must morally obey the laws of Iso (f -> Maybe t) (Arrow s a b)
   -- we don't enforce it with this type though we will check it with stochastic search
 
 -- sequential arrow composition
@@ -72,7 +75,7 @@ data TxArrow f t s a b =
        -> TxArrow from to s a c
 (>>>>) x y = TxArrow
              { txArrow  = txArrow x >=> txArrow y
-             , constraint = txArrowConstraint x y
+             , constraint = txArrowArrow x y
              , fget = fget x
              , tget = tget y
              , fiso = fiso x
@@ -94,9 +97,9 @@ data TxArrow f t s a b =
              }
 
 -- constraints form a monoidal category
-(<&&>) :: Constraint s a' b'
-       -> Constraint s c' d'
-       -> Constraint s (PBuiltinPair a' c') (PBuiltinPair b' d')
+(<&&>) :: Arrow s a' b'
+       -> Arrow s c' d'
+       -> Arrow s (PBuiltinPair a' c') (PBuiltinPair b' d')
 (<&&>) xp yp = plam $ \ac ->
                   plam $ \bd ->
                        (papp (papp xp (papp pfstBuiltin ac)) (papp pfstBuiltin bd))
@@ -114,13 +117,13 @@ pariso x y = iso (\(fa,fb) -> papp (papp mkPair (fa ^. x)) (fb ^. y))
                            ,papp psndBuiltin faba ^. from y))
 
 
--- txArrowConstraint is a metaprogramming operation
+-- txArrowArrow is a metaprogramming operation
 -- to compose constraints sequentially on chain we would require an on chain txArrow
-txArrowConstraint :: forall from via to s a b c .
+txArrowArrow :: forall from via to s a b c .
                     TxArrow from via s a b
                  -> TxArrow via to s b c
-                 -> Constraint s a c
-txArrowConstraint x y = plam $ \a ->
+                 -> Arrow s a c
+txArrowArrow x y = plam $ \a ->
                          plam $ \c -> (papp (papp (constraint x) a) (txArrowVia a))
                                    <> (papp (papp (constraint y) (txArrowVia a)) c)
   where
