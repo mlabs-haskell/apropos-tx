@@ -80,7 +80,7 @@ typeInfo m =
     paramsA d = error $ show d
 
     nameFromTyVar (PlainTV a _) = a
-    nameFromTyVar (KindedTV a _) = a
+    nameFromTyVar (KindedTV a _ _) = a
 
     termsA (DataD _ _ _ _ cs _) = map termA cs
     termsA (NewtypeD _ _ _ _ c _) = [termA c]
