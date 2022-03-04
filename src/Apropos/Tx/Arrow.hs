@@ -1,72 +1,23 @@
 {-# LANGUAGE RankNTypes #-}
 module Apropos.Tx.Arrow (
-  Protocol,
-  TxSpec,
-  ClosedTxArrow(..),
   TxArrow(..),
   (>>>>),
+  (>>>|),
   (<++>),
   ) where
-import Prelude hiding ((<>))
-import Plutus.V1.Ledger.Tx (Tx,TxOut)
+import Apropos.Tx.Constraint
 import Plutarch
 import Plutarch.Prelude
-import Control.Lens
-import Control.Monad ((>=>))
-
---TODO
---buildScripts :: Protocol -> ProtocolScripts
---
----- requires DSL for constructing a Protocol that composes the constraints to build the Scripts
----- this should construct the arrow corepresentations of the scripts too
----- we can use the arrow corepresentations to define search routines that look for error conditions
----- these could be things specified by the TxSpecs - contracts not being obeyed
----- or protocol level bugs like unconsumable outputs
---
--- protocol "MyProtocol" $ do
---   tx "MyAction" $ do
---     txtmp "CheckTheFees" $ do
---       txarr checkFeeA
---       txarr checkFeeB
---     txtmp "CheckTheAction" $ do
---       txarr checkTheAction
---   tx "MyOtherAction $ do
---     txtmp "CheckTheFees" $ do
---       txarr checkFeeA
---       txarr checkFeeB
---       txarr checkFeeC
---     txtmp "CheckTheOtherAction" $ do
---       txarr checkTheAction
---   tx "EndMyProtocol" $ do
---     txtmp "CheckTheEndCondition" $ do
---       txarr checkTheEndCondition
+import Plutarch.Builtin (ppairDataBuiltin)
 
 
-type Protocol = [TxSpec]
+type PlutarchArrow debruijn antecedent consequent = Term debruijn (antecedent :--> consequent)
 
-type TxSpec = [ClosedTxArrow]
-
-
-type Arrow s a b = Term s (a :--> b :--> PUnit)
-
-data ClosedTxArrow where
-  ClosedTxArrow :: forall f t s a b . TxArrow f t s a b -> ClosedTxArrow
-
-
--- TxArrows compose sequentially
--- from one state to the next
--- on constrained paths
 data TxArrow f t s a b =
   TxArrow {
-    txArrow :: f -> Maybe t
-  , constraint :: Arrow s a b
-  , fget :: Getter Tx (Maybe f)         -- these getters should be a DSL that can be
-  , tget :: Getter [TxOut] (Maybe t)    -- interpreted as a Lens.Getter or a Plutarch.Getter
-  , fiso :: Iso' f (Term s a)
-  , tiso :: Iso' t (Term s b)           -- these ISOs translate between the arr model and constraint
+    haskArrow :: f -> t
+  , plutarchArrow :: PlutarchArrow s a b
   }
-  -- TxArrow must morally obey the laws of Iso (f -> Maybe t) (Arrow s a b)
-  -- we don't enforce it with this type though we will check it with stochastic search
 
 -- sequential arrow composition
 (>>>>) :: forall from via to s a b c .
@@ -74,65 +25,35 @@ data TxArrow f t s a b =
        -> TxArrow via to s b c
        -> TxArrow from to s a c
 (>>>>) x y = TxArrow
-             { txArrow  = txArrow x >=> txArrow y
-             , constraint = txArrowArrow x y
-             , fget = fget x
-             , tget = tget y
-             , fiso = fiso x
-             , tiso = tiso y
+             { haskArrow  = haskArrow y . haskArrow x
+             , plutarchArrow = plam $ \a -> plutarchArrow y # papp (plutarchArrow x) a
              }
 
--- parallel monoidal composition
-(<++>) :: forall fromA fromB toC toD s a b c d .
-          TxArrow fromA toC s a c
+-- compose an arrow with a constraint
+(>>>|) :: TxArrow from to debruijn a b
+       -> TxConstraint to debruijn b
+       -> TxConstraint from debruijn a
+(>>>|) arr c = TxConstraint {
+                 haskConstraint = haskConstraint c . haskArrow arr
+               , plutarchConstraint = plam $ \a -> plutarchConstraint c # papp (plutarchArrow arr) a
+               }
+
+-- run TxArrows in parallel
+(<++>) ::  (PIsData c, PIsData d)
+       => TxArrow fromA toC s a c
        -> TxArrow fromB toD s b d
-       -> TxArrow (fromA,fromB) (toC,toD) s (PBuiltinPair a b) (PBuiltinPair c d)
+       -> TxArrow (fromA,fromB) (toC,toD) s (PBuiltinPair a b) (PBuiltinPair (PAsData c) (PAsData d))
 (<++>) x y = TxArrow
-             { txArrow = \(a, b) -> (,) <$> (txArrow x) a <*> (txArrow y) b
-             , constraint = constraint x <&&> constraint y
-             , fget = to $ \tx -> (,) <$> tx ^. (fget x) <*> tx ^. (fget y)
-             , tget = to $ \tx -> (,) <$> tx ^. (tget x) <*> tx ^. (tget y)
-             , fiso = pariso (fiso x) (fiso y)
-             , tiso = pariso (tiso x) (tiso y)
+             { haskArrow = \(a, b) -> ((haskArrow x) a, (haskArrow y) b)
+             , plutarchArrow = plutarchArrow x <&&> plutarchArrow y
              }
 
--- constraints form a monoidal category
-(<&&>) :: Arrow s a' b'
-       -> Arrow s c' d'
-       -> Arrow s (PBuiltinPair a' c') (PBuiltinPair b' d')
+(<&&>) :: (PIsData b, PIsData d)
+       => PlutarchArrow s a b
+       -> PlutarchArrow s c d
+       -> PlutarchArrow s (PBuiltinPair a c) (PBuiltinPair (PAsData b) (PAsData d))
 (<&&>) xp yp = plam $ \ac ->
-                  plam $ \bd ->
-                       (papp (papp xp (papp pfstBuiltin ac)) (papp pfstBuiltin bd))
-                    <> (papp (papp yp (papp psndBuiltin ac)) (papp psndBuiltin bd))
+                     papp (papp ppairDataBuiltin (pdata (papp xp (papp pfstBuiltin ac))))
+                                                 (pdata (papp yp (papp psndBuiltin ac)))
 
-
--- this should be Semigroup.<>
-(<>) :: Term s PUnit -> Term s PUnit -> Term s PUnit
-(<>) x y = papp (papp (plam $ \_a _b -> pcon PUnit) x) y
-
--- isos in parallel
-pariso :: Iso' a (Term s c) -> Iso' b (Term s d) -> Iso' (a,b)  (Term s (PBuiltinPair c d))
-pariso x y = iso (\(fa,fb) -> papp (papp mkPair (fa ^. x)) (fb ^. y))
-                 (\faba -> (papp pfstBuiltin faba ^. from x
-                           ,papp psndBuiltin faba ^. from y))
-
-
--- txArrowArrow is a metaprogramming operation
--- to compose constraints sequentially on chain we would require an on chain txArrow
-txArrowArrow :: forall from via to s a b c .
-                    TxArrow from via s a b
-                 -> TxArrow via to s b c
-                 -> Arrow s a c
-txArrowArrow x y = plam $ \a ->
-                         plam $ \c -> (papp (papp (constraint x) a) (txArrowVia a))
-                                   <> (papp (papp (constraint y) (txArrowVia a)) c)
-  where
-    txArrowVia :: Term s a -> Term s b
-    txArrowVia t = case (txArrow x) $ (^. from (fiso x)) t of
-                    Just so -> (^. tiso x) so
-                    Nothing -> perror
-
--- ?
-mkPair :: Term s (a :--> b :--> PBuiltinPair a b)
-mkPair = undefined
 
