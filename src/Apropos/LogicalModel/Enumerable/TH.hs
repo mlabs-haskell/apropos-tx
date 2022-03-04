@@ -1,6 +1,7 @@
-module Apropos.LogicalModel.Enumerable.TH (
-  genEnumerable,
-) where
+module Apropos.LogicalModel.Enumerable.TH
+  ( genEnumerable,
+  )
+where
 
 import Language.Haskell.TH
 
