@@ -22,9 +22,13 @@ genEnumerable typName = do
     gen_enumerated = appE (varE (mkName "join")) . listE
 
 type Constructor = (Name, [(Maybe Name, Type)])
+
 type FunctionBody = ExpQ
+
 type GenFunc = [ExpQ] -> FunctionBody
+
 type FuncName = Name
+
 type Func = (FuncName, GenFunc)
 
 genInstance :: Name -> TypeQ -> [Constructor] -> Func -> DecQ
@@ -75,7 +79,7 @@ typeInfo m =
     paramsA (NewtypeD _ _ ps _ _ _) = map nameFromTyVar ps
     paramsA d = error $ show d
 
-    nameFromTyVar (PlainTV a) = a
+    nameFromTyVar (PlainTV a _) = a
     nameFromTyVar (KindedTV a _) = a
 
     termsA (DataD _ _ _ _ cs _) = map termA cs
