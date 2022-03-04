@@ -111,8 +111,3 @@ source-repository-package
   subdir:
     cardano-prelude
     cardano-prelude-test
-
-source-repository-package
-  type: git
-  location: https://github.com/input-output-hk/Win32-network
-  tag: 3825d3abf75f83f406c1f7161883c438dac7277d
