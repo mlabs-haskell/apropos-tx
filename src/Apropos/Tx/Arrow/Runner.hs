@@ -97,7 +97,9 @@ runArrowTest :: ArrowModel p s a b => TxArrow s a b -> Set p -> Property
 runArrowTest arrow targetProperties = genProp $ do
   (f :: f) <- parameterisedGenerator targetProperties
   let expect = (haskArrow arrow) f
-      testScript = pconstant expect #== papp (plutarchArrow arrow) (pconstant f)
+      testScript = pif (pconstant expect #== papp (plutarchArrow arrow) (pconstant f))
+                       (pcon PUnit)
+                       perror
   case evaluateScript $ compile $ unsafeCoerce testScript of
     Left (EvaluationError logs err) -> deliverResult arrow f targetProperties (Left (logs, err))
     Right res -> deliverResult arrow f targetProperties (Right res)
