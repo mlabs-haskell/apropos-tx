@@ -28,7 +28,8 @@ usage:
 	@echo "  nixfmt              -- Apply nix formatting with nixfmt"
 	@echo "  nixfmt_check        -- Check nix files for format errors"
 	@echo "  lint                -- Check the sources with hlint"
-	@echo "  refactor            -- Automatically apply hlint refactors, with prompt"
+	@echo "  refactor_cautious   -- Automatically apply hlint refactors, with prompt"
+	@echo "  refactor            -- Automatically apply hlint refactors, without prompt"
 	@echo "  readme_contents     -- Add table of contents to README"
 	@echo "  update_plutus       -- Update plutus version with niv"
 
@@ -92,8 +93,12 @@ lint: requires_nix_shell
 	hlint $(FORMAT_SOURCES)
 
 # Apply automatic hlint refactors, with prompt
-refactor: requires_nix_shell
+refactor_cautious: requires_nix_shell
 	for src in $(FORMAT_SOURCES) ; do hlint --refactor --refactor-options='-i -s' $$src ; done
+
+# Apply automatic hlint refactors, with prompt
+refactor: requires_nix_shell
+	for src in $(FORMAT_SOURCES) ; do hlint --refactor --refactor-options='-i' $$src ; done
 
 readme_contents:
 	echo "this command is not nix-ified, you may receive an error from npx"

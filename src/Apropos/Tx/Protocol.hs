@@ -1,6 +1,7 @@
 module Apropos.Tx.Protocol (
-  Protocol(..),
-  ) where
+  Protocol (..),
+) where
+
 import Apropos.Tx.Constraint.Policy
 
 newtype Protocol = Protocol [ConstraintPolicy]
@@ -10,4 +11,3 @@ newtype Protocol = Protocol [ConstraintPolicy]
 -- redeemer :: ()
 -- by reading the currency symbols and ensuring each ConstraintPolicy runs
 -- we delegate all protocol logic to the Policies
-

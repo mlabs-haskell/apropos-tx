@@ -1,11 +1,11 @@
 module Main (main) where
 
 import Spec.Int
-import Spec.IntPair
-import Spec.IntPermutationGen
 import Spec.IntArrow
 import Spec.IntArrowConstraint
 import Spec.IntConstraint
+import Spec.IntPair
+import Spec.IntPermutationGen
 import Spec.Plutarch.CostModel
 import Spec.Plutarch.MagicNumber
 import Spec.TicTacToe.Location

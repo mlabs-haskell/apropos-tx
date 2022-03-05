@@ -1,17 +1,15 @@
 module Apropos.Tx.Arrow.Runner (
-  HasMemoryBounds(..),
-  HasCPUBounds(..),
+  HasMemoryBounds (..),
+  HasCPUBounds (..),
   runArrowTestsWhere,
-  ) where
-import Apropos.HasResourceBounds
-import Apropos.Tx.Arrow
+) where
+
 import Apropos.Gen
 import Apropos.HasLogicalModel
 import Apropos.HasParameterisedGenerator
+import Apropos.HasResourceBounds
 import Apropos.LogicalModel
-import Plutarch
-import Plutarch.Prelude
-import Plutarch.Lift
+import Apropos.Tx.Arrow
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.String (fromString)
@@ -20,6 +18,9 @@ import Hedgehog (
   Group (..),
   Property,
  )
+import Plutarch
+import Plutarch.Lift
+import Plutarch.Prelude
 import Plutus.V1.Ledger.Scripts (ScriptError (..), evaluateScript)
 import PlutusCore.Evaluation.Machine.ExBudget (ExBudget (..))
 import Text.PrettyPrint (
@@ -38,21 +39,21 @@ import Text.PrettyPrint qualified as PP
 import Text.Show.Pretty (ppDoc)
 import Unsafe.Coerce
 
-type ArrowTest p s a b = ( HasLogicalModel p (PConstantRepr a)
-                          , HasParameterisedGenerator p (PConstantRepr a)
-                          , HasMemoryBounds (TxArrow s a b) a
-                          , HasCPUBounds (TxArrow s a b) a
-                          , PConstant a
-                          , PConstant b
-                          , PLifted (PConstanted a) ~ a
-                          , PLifted (PConstanted b) ~ b
-                          , PIsData (PConstanted a)
-                          , PIsData (PConstanted b)
-                          , PConstantRepr a ~ a
-                          , PConstantRepr b ~ b
-                          , PEq (PConstanted b)
-                          )
-
+type ArrowTest p s a b =
+  ( HasLogicalModel p (PConstantRepr a)
+  , HasParameterisedGenerator p (PConstantRepr a)
+  , HasMemoryBounds (TxArrow s a b) a
+  , HasCPUBounds (TxArrow s a b) a
+  , PConstant a
+  , PConstant b
+  , PLifted (PConstanted a) ~ a
+  , PLifted (PConstanted b) ~ b
+  , PIsData (PConstanted a)
+  , PIsData (PConstanted b)
+  , PConstantRepr a ~ a
+  , PConstantRepr b ~ b
+  , PEq (PConstanted b)
+  )
 
 runArrowTestsWhere :: ArrowTest p s a b => TxArrow s a b -> String -> Formula p -> Group
 runArrowTestsWhere arrow name condition =
@@ -64,20 +65,23 @@ runArrowTestsWhere arrow name condition =
 runArrowTest :: ArrowTest p s a b => TxArrow s a b -> Set p -> Property
 runArrowTest arrow targetProperties = genProp $ do
   (f :: f) <- parameterisedGenerator targetProperties
-  let expect = (haskArrow arrow) f
-      testScript = pif ((pdata $ pconstant expect) #== papp (plutarchArrow arrow) (pdata $ pconstant f))
-                       (pcon PUnit)
-                       perror
+  let expect = haskArrow arrow f
+      testScript =
+        pif
+          (pdata (pconstant expect) #== papp (plutarchArrow arrow) (pdata $ pconstant f))
+          (pcon PUnit)
+          perror
   case evaluateScript $ compile $ unsafeCoerce testScript of
     Left (EvaluationError logs err) -> deliverResult arrow f targetProperties (Left (logs, err))
     Right res -> deliverResult arrow f targetProperties (Right res)
     Left err -> failWithFootnote (show err)
 
-
 deliverResult ::
   ( HasMemoryBounds (TxArrow s a b) a
   , HasCPUBounds (TxArrow s a b) a
-  , Show a, Show p) =>
+  , Show a
+  , Show p
+  ) =>
   TxArrow s a b ->
   a ->
   Set p ->

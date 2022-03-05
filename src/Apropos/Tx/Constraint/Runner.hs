@@ -1,17 +1,15 @@
 module Apropos.Tx.Constraint.Runner (
-  HasMemoryBounds(..),
-  HasCPUBounds(..),
+  HasMemoryBounds (..),
+  HasCPUBounds (..),
   runConstraintTestsWhere,
-  ) where
-import Apropos.HasResourceBounds
-import Apropos.Tx.Constraint
+) where
+
 import Apropos.Gen
 import Apropos.HasLogicalModel
 import Apropos.HasParameterisedGenerator
+import Apropos.HasResourceBounds
 import Apropos.LogicalModel
-import Plutarch
-import Plutarch.Prelude
-import Plutarch.Lift
+import Apropos.Tx.Constraint
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.String (fromString)
@@ -20,6 +18,9 @@ import Hedgehog (
   Group (..),
   Property,
  )
+import Plutarch
+import Plutarch.Lift
+import Plutarch.Prelude
 import Plutus.V1.Ledger.Scripts (ScriptError (..), evaluateScript)
 import PlutusCore.Evaluation.Machine.ExBudget (ExBudget (..))
 import Text.PrettyPrint (
@@ -38,16 +39,16 @@ import Text.PrettyPrint qualified as PP
 import Text.Show.Pretty (ppDoc)
 import Unsafe.Coerce
 
-type ConstraintTest p s a = ( HasLogicalModel p (PConstantRepr a)
-                          , HasParameterisedGenerator p (PConstantRepr a)
-                          , HasMemoryBounds (TxConstraint s a) a
-                          , HasCPUBounds (TxConstraint s a) a
-                          , PConstant a
-                          , PLifted (PConstanted a) ~ a
-                          , PIsData (PConstanted a)
-                          , PConstantRepr a ~ a
-                          )
-
+type ConstraintTest p s a =
+  ( HasLogicalModel p (PConstantRepr a)
+  , HasParameterisedGenerator p (PConstantRepr a)
+  , HasMemoryBounds (TxConstraint s a) a
+  , HasCPUBounds (TxConstraint s a) a
+  , PConstant a
+  , PLifted (PConstanted a) ~ a
+  , PIsData (PConstanted a)
+  , PConstantRepr a ~ a
+  )
 
 runConstraintTestsWhere :: ConstraintTest p s a => TxConstraint s a -> String -> Formula p -> Group
 runConstraintTestsWhere constraint name condition =
@@ -65,23 +66,25 @@ runConstraintTest constraint targetProperties = genProp $ do
     Right res -> deliverResult constraint f targetProperties (Right res)
     Left err -> failWithFootnote (show err)
 
-
 deliverResult ::
   ( HasMemoryBounds (TxConstraint s a) a
   , HasCPUBounds (TxConstraint s a) a
-  , Show a, Show p,PConstant a) =>
+  , Show a
+  , Show p
+  , PConstant a
+  ) =>
   TxConstraint s a ->
   a ->
   Set p ->
   Either ([Text], String) (ExBudget, [Text]) ->
   Gen ()
 deliverResult constraint input inputProps res = do
-  let expect = (haskConstraint constraint) (pconstantToRepr input)
-  case (expect,res) of
-      (False, Left _) -> pure ()
-      (True, Right (cost, _)) -> successWithBudgetCheck cost
-      (True, Left err) -> failWithFootnote $ unexpectedFailure err
-      (False, Right (_, logs)) -> failWithFootnote $ unexpectedSuccess logs
+  let expect = haskConstraint constraint (pconstantToRepr input)
+  case (expect, res) of
+    (False, Left _) -> pure ()
+    (True, Right (cost, _)) -> successWithBudgetCheck cost
+    (True, Left err) -> failWithFootnote $ unexpectedFailure err
+    (False, Right (_, logs)) -> failWithFootnote $ unexpectedSuccess logs
   where
     successWithBudgetCheck :: ExBudget -> Gen ()
     successWithBudgetCheck cost@(ExBudget cpu mem) =
