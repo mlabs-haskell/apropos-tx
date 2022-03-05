@@ -45,15 +45,14 @@ data TxArrow f t s a b =
        -> TxArrow (fromA,fromB) (toC,toD) s (PBuiltinPair a b) (PBuiltinPair (PAsData c) (PAsData d))
 (<++>) x y = TxArrow
              { haskArrow = \(a, b) -> ((haskArrow x) a, (haskArrow y) b)
-             , plutarchArrow = plutarchArrow x <&&> plutarchArrow y
+             , plutarchArrow = plutarchArrow x `plutarchParArr` plutarchArrow y
              }
-
-(<&&>) :: (PIsData b, PIsData d)
-       => PlutarchArrow s a b
-       -> PlutarchArrow s c d
-       -> PlutarchArrow s (PBuiltinPair a c) (PBuiltinPair (PAsData b) (PAsData d))
-(<&&>) xp yp = plam $ \ac ->
-                     papp (papp ppairDataBuiltin (pdata (papp xp (papp pfstBuiltin ac))))
-                                                 (pdata (papp yp (papp psndBuiltin ac)))
-
+  where
+    plutarchParArr :: (PIsData b, PIsData d)
+                   => PlutarchArrow s a b
+                   -> PlutarchArrow s c d
+                   -> PlutarchArrow s (PBuiltinPair a c) (PBuiltinPair (PAsData b) (PAsData d))
+    plutarchParArr xp yp = plam $ \ac ->
+                         papp (papp ppairDataBuiltin (pdata (papp xp (papp pfstBuiltin ac))))
+                                                     (pdata (papp yp (papp psndBuiltin ac)))
 

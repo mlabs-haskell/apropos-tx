@@ -81,6 +81,7 @@ library
                  , Apropos.Tx
                  , Apropos.Tx.Arrow
                  , Apropos.Tx.Constraint
+                 , Apropos.Tx.Constraint.Policy
   hs-source-dirs:  src
 
 test-suite examples

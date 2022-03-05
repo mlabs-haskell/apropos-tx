@@ -3,9 +3,11 @@ module Apropos.Tx.Constraint (
   PlutarchConstraint,
   TxConstraint(..),
   ) where
+import Plutarch (POpaque,popaque)
 import Plutarch.Prelude
 
-type PlutarchConstraint debruijn domain = Term debruijn (domain :--> PUnit)
+-- where POpaque is a truthy value e.g. perror = False, PUnit = True
+type PlutarchConstraint debruijn domain = Term debruijn (domain :--> POpaque)
 
 data TxConstraint haskDomain debruijn plutarchDomain =
   TxConstraint {
@@ -17,13 +19,23 @@ data TxConstraint haskDomain debruijn plutarchDomain =
 instance Semigroup (TxConstraint a debruijn a') where
   (<>) a b = TxConstraint {
                  haskConstraint = \c -> (haskConstraint a) c && (haskConstraint b) c
-               , plutarchConstraint = plam $ \c -> (papp (plutarchConstraint a) c)
-                                                <> (papp (plutarchConstraint b) c)
+               , plutarchConstraint = (plutarchConstraint a)
+                          `plutarchConstraintSemigroup` (plutarchConstraint b)
                }
+
+
+plutarchConstraintSemigroup :: PlutarchConstraint debruijn a
+                             -> PlutarchConstraint debruijn a
+                             -> PlutarchConstraint debruijn a
+plutarchConstraintSemigroup x y = plam $ \a -> opaqueSemigroup (papp x a) (papp y a)
+  where
+    opaqueSemigroup ig nor = papp (papp (plam $ \_ig _nor-> popaque $ pcon PUnit) ig) nor
+
+
 
 instance Monoid (TxConstraint a debruijn a') where
   mempty = TxConstraint {
              haskConstraint = \_ -> True
-           , plutarchConstraint = plam $ \_ -> pcon PUnit
+           , plutarchConstraint = plam $ \_ -> popaque $ pcon PUnit
            }
 
