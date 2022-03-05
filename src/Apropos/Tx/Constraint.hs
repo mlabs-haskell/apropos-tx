@@ -2,6 +2,7 @@
 module Apropos.Tx.Constraint (
   PlutarchConstraint,
   TxConstraint(..),
+  txEq,
   ) where
 import Plutarch (POpaque,popaque)
 import Plutarch.Prelude
@@ -39,3 +40,15 @@ instance Monoid (TxConstraint a debruijn a') where
            , plutarchConstraint = plam $ \_ -> popaque $ pcon PUnit
            }
 
+-- we are introducing PBuiltinPair here for arrow composition
+-- e.g. compose two getter arrows for the same type in parallel then pipe into this
+-- can we strip out the construction and deconstruction of these pairs on composition?
+-- either that or introduce a richer family of constraint types
+-- e.g. UnaryConstraint, BinaryConstraint, ListConstraint...
+txEq :: (Eq a) => TxConstraint (a,a) debruijn (PBuiltinPair (PAsData p) (PAsData p))
+txEq = TxConstraint
+  { haskConstraint = uncurry (==)
+  , plutarchConstraint = plam $ \pp -> pif (papp pfstBuiltin pp  #== papp psndBuiltin pp)
+                                           (popaque $ pcon PUnit)
+                                           perror
+  }
