@@ -6,18 +6,19 @@ module Apropos.Tx.Constraint (
   ) where
 import Plutarch (POpaque,popaque)
 import Plutarch.Prelude
+import Plutarch.Lift
 
 -- where POpaque is a truthy value e.g. perror = False, PUnit = True
 type PlutarchConstraint debruijn domain = Term debruijn (domain :--> POpaque)
 
-data TxConstraint haskDomain debruijn plutarchDomain =
+data TxConstraint debruijn domain =
   TxConstraint {
-    haskConstraint :: haskDomain -> Bool
-  , plutarchConstraint :: PlutarchConstraint debruijn plutarchDomain
+    haskConstraint :: PConstantRepr domain -> Bool
+  , plutarchConstraint :: PlutarchConstraint debruijn (PConstanted domain)
   }
 
 -- this is like && for constraints on the same type
-instance Semigroup (TxConstraint a debruijn a') where
+instance Semigroup (TxConstraint debruijn a) where
   (<>) a b = TxConstraint {
                  haskConstraint = \c -> (haskConstraint a) c && (haskConstraint b) c
                , plutarchConstraint = (plutarchConstraint a)
@@ -34,18 +35,14 @@ plutarchConstraintSemigroup x y = plam $ \a -> opaqueSemigroup (papp x a) (papp 
 
 
 
-instance Monoid (TxConstraint a debruijn a') where
+instance Monoid (TxConstraint debruijn a) where
   mempty = TxConstraint {
              haskConstraint = \_ -> True
            , plutarchConstraint = plam $ \_ -> popaque $ pcon PUnit
            }
 
--- we are introducing PBuiltinPair here for arrow composition
--- e.g. compose two getter arrows for the same type in parallel then pipe into this
--- can we strip out the construction and deconstruction of these pairs on composition?
--- either that or introduce a richer family of constraint types
--- e.g. UnaryConstraint, BinaryConstraint, ListConstraint...
-txEq :: (Eq a) => TxConstraint (a,a) debruijn (PBuiltinPair (PAsData p) (PAsData p))
+-- TODO redundant pairing?
+txEq :: (Eq (PConstantRepr a), PEq (PConstanted a)) => TxConstraint debruijn (a,a)
 txEq = TxConstraint
   { haskConstraint = uncurry (==)
   , plutarchConstraint = plam $ \pp -> pif (papp pfstBuiltin pp  #== papp psndBuiltin pp)

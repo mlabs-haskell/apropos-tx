@@ -3,6 +3,7 @@ module Main (main) where
 import Spec.Int
 import Spec.IntPair
 import Spec.IntPermutationGen
+import Spec.IntArrow
 import Spec.Plutarch.CostModel
 import Spec.Plutarch.MagicNumber
 import Spec.TicTacToe.Location
@@ -56,5 +57,9 @@ tests =
         [ magicNumberPropGenTests
         , addCostPropGenTests
         , addCostModelPlutarchTests
+        ]
+    , testGroup
+        "Arrow test"
+        [ intArrowPlutarchTests
         ]
     ]

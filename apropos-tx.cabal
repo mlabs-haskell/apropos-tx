@@ -80,6 +80,7 @@ library
                  , Apropos.Script
                  , Apropos.Tx
                  , Apropos.Tx.Arrow
+                 , Apropos.Tx.Arrow.Runner
                  , Apropos.Tx.Constraint
                  , Apropos.Tx.Constraint.Policy
   hs-source-dirs:  src
@@ -92,6 +93,7 @@ test-suite examples
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   other-modules:
     Spec.Int
+    Spec.IntArrow
     Spec.IntPermutationGen
     Spec.IntPair
     Spec.TicTacToe.Player
