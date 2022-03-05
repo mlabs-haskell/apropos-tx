@@ -4,6 +4,7 @@ module Apropos.Tx.Constraint (
   PlutarchConstraint,
   TxConstraint(..),
   Tuple(..),
+  txEq,
   txNeq,
   ) where
 import Plutarch (POpaque,popaque)
@@ -53,6 +54,20 @@ txNeq = TxConstraint
                   perror
   }
 
+txEq :: ( Eq (PConstantRepr a) )
+      => TxConstraint debruijn (Tuple a a)
+txEq = TxConstraint
+  { haskConstraint = uncurry (==)
+  , plutarchConstraint = plam $ \pp ->
+              pif (papp pfstBuiltin (pfromData pp)  #== papp psndBuiltin (pfromData pp))
+                  (popaque $ pcon PUnit)
+                  perror
+  }
+
+
+
+
+-- hmmmmm...
 data Tuple a b = Tuple a b
 
 instance (PConstant a, PConstant b) => PConstant (Tuple a b) where

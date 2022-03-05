@@ -19,21 +19,39 @@ instance HasParameterisedGenerator IntProp Integer where
   parameterisedGenerator s = fromIntegral <$> (parameterisedGenerator s :: Gen Int)
 
 
-intArrow :: TxArrow s Integer Integer
-intArrow = TxArrow {
-             haskArrow = \i -> 10 - i
-           , plutarchArrow = plam $ \i -> pdata $ 10 - (pfromData i)
+intArrowA :: TxArrow s Integer Integer
+intArrowA = TxArrow {
+             haskArrow = \i -> i + 10
+           , plutarchArrow = plam $ \i -> pdata $ (pfromData i) + 10
+           }
+
+intArrowA' :: TxArrow s Integer Integer
+intArrowA' = TxArrow {
+             haskArrow = \i -> i - 10
+           , plutarchArrow = plam $ \i -> pdata $ (pfromData i) - 10
            }
 
 intArrowB :: TxArrow s Integer Integer
 intArrowB = TxArrow {
-             haskArrow = \i -> 5 + i
-           , plutarchArrow = plam $ \i -> pdata $ 5 + (pfromData i)
+             haskArrow = \i -> i + 5
+           , plutarchArrow = plam $ \i -> pdata $ (pfromData i) + 5
            }
 
-intConstraint :: TxConstraint s Integer
-intConstraint = (intArrow &&&& intArrowB) >>>| txNeq
+intArrowB' :: TxArrow s Integer Integer
+intArrowB' = TxArrow {
+             haskArrow = \i -> i - 5
+           , plutarchArrow = plam $ \i -> pdata $ (pfromData i) - 5
+           }
 
+
+intConstraintA :: TxConstraint s Integer
+intConstraintA = (intArrowA &&&& intArrowB) >>>| txNeq
+
+
+intConstraintB :: TxConstraint s Integer
+intConstraintB = (intArrowA &&&& intArrowB) >>>> (intArrowA' <++> intArrowB') >>>| txEq
+
+-- this is not a good way to do the memoryBounds - they should just be args
 instance HasMemoryBounds (TxConstraint s Integer) Integer where
   memoryBounds _ _ = (ExMemory minBound, ExMemory maxBound)
 
@@ -43,6 +61,8 @@ instance HasCPUBounds (TxConstraint s Integer) Integer where
 intArrowConstraintPlutarchTests :: TestTree
 intArrowConstraintPlutarchTests =
   testGroup "intArrowConstraintPlutarchTests" $
-    fromGroup <$> [ runConstraintTestsWhere intConstraint "Plutarch Int Constraint" (Yes :: Formula IntProp)
+    fromGroup <$> [ runConstraintTestsWhere intConstraintA "Plutarch Int Constraint A" (Yes :: Formula IntProp)
+                  , runConstraintTestsWhere intConstraintB "Plutarch Int Constraint B" (Yes :: Formula IntProp)
+
                   ]
 

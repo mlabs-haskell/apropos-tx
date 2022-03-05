@@ -3,7 +3,7 @@ module Apropos.Tx.Arrow (
   TxArrow(..),
   (>>>>),
   (>>>|),
---  (<++>),
+  (<++>),
   (&&&&),
   ) where
 import Apropos.Tx.Constraint
@@ -41,20 +41,17 @@ data TxArrow s a b =
                , plutarchConstraint = plam $ \a -> plutarchConstraint c # papp (plutarchArrow arr) a
                }
 
----- run TxArrows in parallel
----- TODO redundant pairing? can we remove somehow after composition?
----- an AST traversal that removes unnecessary tupling/untupling post composition would be great
---(<++>) :: forall s a b c d .
---          (PIsData (PConstanted c), PIsData (PConstanted d))
---       => TxArrow s a c
---       -> TxArrow s b d
---       -> TxArrow s (a,b) (c,d)
---(<++>) x y = TxArrow
---             { haskArrow = \(a, b) -> ((haskArrow x) a, (haskArrow y) b)
---             , plutarchArrow = plam $ \ac -> punsafeCoerce
---                     (papp (papp ptuple (pdata $ papp (plutarchArrow x) (papp pfstBuiltin ac)))
---                                        (pdata $ papp (plutarchArrow y) (papp psndBuiltin ac)))
---             }
+-- run TxArrows in parallel
+(<++>) :: TxArrow s a c
+       -> TxArrow s b d
+       -> TxArrow s (Tuple a b) (Tuple c d)
+(<++>) x y = TxArrow
+             { haskArrow = \(a, b) -> ((haskArrow x) a, (haskArrow y) b)
+             , plutarchArrow = plam $ \ac -> pdata
+                     (papp (papp ppairDataBuiltin
+                             (papp (plutarchArrow x) (papp pfstBuiltin $ pfromData ac)))
+                             (papp (plutarchArrow y) (papp psndBuiltin $ pfromData ac)))
+             }
 
 (&&&&) :: TxArrow s a b
        -> TxArrow s a c
