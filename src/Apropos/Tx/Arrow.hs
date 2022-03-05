@@ -4,21 +4,22 @@ module Apropos.Tx.Arrow (
   (>>>>),
   (>>>|),
 --  (<++>),
+  (&&&&),
   ) where
 import Apropos.Tx.Constraint
 import Plutarch
 import Plutarch.Lift
---import Plutarch.Prelude
+import Plutarch.Prelude
 --import Plutarch.Api.V1.Tuple
---import Plutarch.Builtin (ppairDataBuiltin)
 
+import Plutarch.Builtin
 
 type PlutarchArrow debruijn antecedent consequent = Term debruijn (antecedent :--> consequent)
 
 data TxArrow s a b =
   TxArrow {
     haskArrow :: PConstantRepr a -> PConstantRepr b
-  , plutarchArrow :: PlutarchArrow s (PConstanted a) (PConstanted b)
+  , plutarchArrow :: PlutarchArrow s (PAsData (PConstanted a)) (PAsData (PConstanted b))
   }
 
 -- sequential arrow composition
@@ -42,20 +43,26 @@ data TxArrow s a b =
 
 ---- run TxArrows in parallel
 ---- TODO redundant pairing? can we remove somehow after composition?
---(<++>) :: TxArrow s a c
+---- an AST traversal that removes unnecessary tupling/untupling post composition would be great
+--(<++>) :: forall s a b c d .
+--          (PIsData (PConstanted c), PIsData (PConstanted d))
+--       => TxArrow s a c
 --       -> TxArrow s b d
 --       -> TxArrow s (a,b) (c,d)
 --(<++>) x y = TxArrow
 --             { haskArrow = \(a, b) -> ((haskArrow x) a, (haskArrow y) b)
---             , plutarchArrow = plutarchArrow x `plutarchParArr` plutarchArrow y
+--             , plutarchArrow = plam $ \ac -> punsafeCoerce
+--                     (papp (papp ptuple (pdata $ papp (plutarchArrow x) (papp pfstBuiltin ac)))
+--                                        (pdata $ papp (plutarchArrow y) (papp psndBuiltin ac)))
 --             }
---  where
---    plutarchParArr :: (PIsData b, PIsData d)
---                   => PlutarchArrow s a b
---                   -> PlutarchArrow s c d
---                   -> PlutarchArrow s (PBuiltinPair a c) (PBuiltinPair (PAsData b) (PAsData d))
---    plutarchParArr xp yp = plam $ \ac ->
---                             plet (pbuiltinPairFromTuple ac) $ \ac' ->
---                         papp (papp ptuple (papp xp (papp pfstBuiltin ac')))
---                                           (papp yp (papp psndBuiltin ac'))
+
+(&&&&) :: TxArrow s a b
+       -> TxArrow s a c
+       -> TxArrow s a (Tuple b c)
+(&&&&) x y = TxArrow
+             { haskArrow = \a -> ((haskArrow x) a, (haskArrow y) a)
+             , plutarchArrow = (plam $ \a -> pdata
+                               (papp (papp ppairDataBuiltin (papp (plutarchArrow x) a))
+                                                            (papp (plutarchArrow y) a)))
+             }
 

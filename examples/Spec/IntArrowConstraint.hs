@@ -1,12 +1,12 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Spec.IntArrow (
-  intArrowPlutarchTests,
+module Spec.IntArrowConstraint (
+  intArrowConstraintPlutarchTests,
 ) where
 import Spec.Int
 import Apropos
 import Apropos.Tx.Arrow
-import Apropos.Tx.Arrow.Runner
-import Plutarch.Builtin
+import Apropos.Tx.Constraint
+import Apropos.Tx.Constraint.Runner
 import Plutarch.Prelude
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.Hedgehog (fromGroup)
@@ -25,16 +25,24 @@ intArrow = TxArrow {
            , plutarchArrow = plam $ \i -> pdata $ 10 - (pfromData i)
            }
 
+intArrowB :: TxArrow s Integer Integer
+intArrowB = TxArrow {
+             haskArrow = \i -> 5 + i
+           , plutarchArrow = plam $ \i -> pdata $ 5 + (pfromData i)
+           }
 
-instance HasMemoryBounds (TxArrow s Integer Integer) Integer where
+intConstraint :: TxConstraint s Integer
+intConstraint = (intArrow &&&& intArrowB) >>>| txNeq
+
+instance HasMemoryBounds (TxConstraint s Integer) Integer where
   memoryBounds _ _ = (ExMemory minBound, ExMemory maxBound)
 
-instance HasCPUBounds (TxArrow s Integer Integer) Integer where
+instance HasCPUBounds (TxConstraint s Integer) Integer where
   cpuBounds _ _ = (ExCPU minBound, ExCPU maxBound)
 
-intArrowPlutarchTests :: TestTree
-intArrowPlutarchTests =
-  testGroup "intArrowPlutarchTests" $
-    fromGroup <$> [ runArrowTestsWhere intArrow "Plutarch Int Arrow" (Yes :: Formula IntProp)
+intArrowConstraintPlutarchTests :: TestTree
+intArrowConstraintPlutarchTests =
+  testGroup "intArrowConstraintPlutarchTests" $
+    fromGroup <$> [ runConstraintTestsWhere intConstraint "Plutarch Int Constraint" (Yes :: Formula IntProp)
                   ]
 

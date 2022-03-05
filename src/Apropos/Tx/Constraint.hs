@@ -1,8 +1,10 @@
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeFamilies #-}
 module Apropos.Tx.Constraint (
   PlutarchConstraint,
   TxConstraint(..),
-  txEq,
+  Tuple(..),
+  txNeq,
   ) where
 import Plutarch (POpaque,popaque)
 import Plutarch.Prelude
@@ -14,7 +16,7 @@ type PlutarchConstraint debruijn domain = Term debruijn (domain :--> POpaque)
 data TxConstraint debruijn domain =
   TxConstraint {
     haskConstraint :: PConstantRepr domain -> Bool
-  , plutarchConstraint :: PlutarchConstraint debruijn (PConstanted domain)
+  , plutarchConstraint :: PlutarchConstraint debruijn (PAsData (PConstanted domain))
   }
 
 -- this is like && for constraints on the same type
@@ -41,12 +43,25 @@ instance Monoid (TxConstraint debruijn a) where
            , plutarchConstraint = plam $ \_ -> popaque $ pcon PUnit
            }
 
--- TODO redundant pairing?
-txEq :: (Eq (PConstantRepr a), PEq (PConstanted a)) => TxConstraint debruijn (a,a)
-txEq = TxConstraint
-  { haskConstraint = uncurry (==)
-  , plutarchConstraint = plam $ \pp -> pif (papp pfstBuiltin pp  #== papp psndBuiltin pp)
-                                           (popaque $ pcon PUnit)
-                                           perror
+txNeq :: ( Eq (PConstantRepr a) )
+      => TxConstraint debruijn (Tuple a a)
+txNeq = TxConstraint
+  { haskConstraint = uncurry (/=)
+  , plutarchConstraint = plam $ \pp ->
+              pif (papp pnot (papp pfstBuiltin (pfromData pp)  #== papp psndBuiltin (pfromData pp)))
+                  (popaque $ pcon PUnit)
+                  perror
   }
+
+data Tuple a b = Tuple a b
+
+instance (PConstant a, PConstant b) => PConstant (Tuple a b) where
+  type PConstantRepr (Tuple a b) = (PConstantRepr a, PConstantRepr b)
+  type PConstanted (Tuple a b) = PBuiltinPair (PAsData (PConstanted a)) (PAsData (PConstanted b))
+  pconstantToRepr (Tuple x y) = (pconstantToRepr x, pconstantToRepr y)
+  pconstantFromRepr (x, y) = do
+    x' <- pconstantFromRepr @a x
+    y' <- pconstantFromRepr @b y
+    Just (Tuple x' y')
+
 

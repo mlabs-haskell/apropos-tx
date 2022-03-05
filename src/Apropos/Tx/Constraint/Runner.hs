@@ -44,6 +44,7 @@ type ConstraintTest p s a = ( HasLogicalModel p (PConstantRepr a)
                           , HasCPUBounds (TxConstraint s a) a
                           , PConstant a
                           , PLifted (PConstanted a) ~ a
+                          , PIsData (PConstanted a)
                           , PConstantRepr a ~ a
                           )
 
@@ -58,7 +59,7 @@ runConstraintTestsWhere constraint name condition =
 runConstraintTest :: ConstraintTest p s a => TxConstraint s a -> Set p -> Property
 runConstraintTest constraint targetProperties = genProp $ do
   (f :: f) <- parameterisedGenerator targetProperties
-  let testScript = papp (plutarchConstraint constraint) (pconstant f)
+  let testScript = papp (plutarchConstraint constraint) (pdata $ pconstant f)
   case evaluateScript $ compile $ unsafeCoerce testScript of
     Left (EvaluationError logs err) -> deliverResult constraint f targetProperties (Left (logs, err))
     Right res -> deliverResult constraint f targetProperties (Right res)

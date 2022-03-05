@@ -46,6 +46,8 @@ type ArrowTest p s a b = ( HasLogicalModel p (PConstantRepr a)
                           , PConstant b
                           , PLifted (PConstanted a) ~ a
                           , PLifted (PConstanted b) ~ b
+                          , PIsData (PConstanted a)
+                          , PIsData (PConstanted b)
                           , PConstantRepr a ~ a
                           , PConstantRepr b ~ b
                           , PEq (PConstanted b)
@@ -63,7 +65,7 @@ runArrowTest :: ArrowTest p s a b => TxArrow s a b -> Set p -> Property
 runArrowTest arrow targetProperties = genProp $ do
   (f :: f) <- parameterisedGenerator targetProperties
   let expect = (haskArrow arrow) f
-      testScript = pif (pconstant expect #== papp (plutarchArrow arrow) (pconstant f))
+      testScript = pif ((pdata $ pconstant expect) #== papp (plutarchArrow arrow) (pdata $ pconstant f))
                        (pcon PUnit)
                        perror
   case evaluateScript $ compile $ unsafeCoerce testScript of

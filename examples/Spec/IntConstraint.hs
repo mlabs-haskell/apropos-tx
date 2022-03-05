@@ -22,7 +22,7 @@ instance HasParameterisedGenerator IntProp Integer where
 intConstraint :: TxConstraint s Integer
 intConstraint = TxConstraint {
              haskConstraint = \i -> 9 < i
-           , plutarchConstraint = plam $ \i -> popaque (pif (9 #< i) (pcon PUnit) perror)
+           , plutarchConstraint = plam $ \i -> popaque (pif (9 #< pfromData i) (pcon PUnit) perror)
            }
 
 

@@ -81,6 +81,7 @@ test-suite examples
   other-modules:
     Spec.Int
     Spec.IntArrow
+    Spec.IntArrowConstraint
     Spec.IntConstraint
     Spec.IntPermutationGen
     Spec.IntPair

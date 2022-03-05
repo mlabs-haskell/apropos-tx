@@ -4,6 +4,7 @@ import Spec.Int
 import Spec.IntPair
 import Spec.IntPermutationGen
 import Spec.IntArrow
+import Spec.IntArrowConstraint
 import Spec.IntConstraint
 import Spec.Plutarch.CostModel
 import Spec.Plutarch.MagicNumber
@@ -66,5 +67,9 @@ tests =
     , testGroup
         "Constraint Test"
         [ intConstraintPlutarchTests
+        ]
+    , testGroup
+        "Arrow and Constraint composition Test"
+        [ intArrowConstraintPlutarchTests
         ]
     ]
