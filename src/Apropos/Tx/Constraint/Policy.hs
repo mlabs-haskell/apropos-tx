@@ -14,6 +14,7 @@ data ConstraintPolicy = ConstraintPolicy CurrencySymbol MintingPolicy
 --myConstraintPolicy :: ConstraintPolicy
 --myConstraintPolicy = ConstraintPolicy cs mp
 --  where mplam :: ClosedTerm PMintingPolicy
+--        -- we can branch on constraints here with the redeemer arg
 --        mplam = plam $ \_ ctx -> papp (plutarchConstraint myConstraint) ctx
 --        mp = mkMintingPolicy mplam
 --        cs = mintingPolicySymbol mp
