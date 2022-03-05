@@ -38,6 +38,7 @@ common lang
     UndecidableInstances
 
   build-depends:      base ^>=4.14
+                    , apropos
                     , containers
                     , hedgehog
                     , free
@@ -61,23 +62,7 @@ common lang
 
 library
   import:          lang
-  exposed-modules: Apropos
-                 , Apropos.Type
-                 , Apropos.LogicalModel
-                 , Apropos.LogicalModel.Formula
-                 , Apropos.LogicalModel.Enumerable
-                 , Apropos.LogicalModel.Enumerable.TH
-                 , Apropos.HasResourceBounds
-                 , Apropos.HasLogicalModel
-                 , Apropos.HasParameterisedGenerator
-                 , Apropos.HasPermutationGenerator
-                 , Apropos.HasPermutationGenerator.Abstraction
-                 , Apropos.HasPermutationGenerator.Contract
-                 , Apropos.HasPermutationGenerator.Morphism
-                 , Apropos.Gen
-                 , Apropos.Gen.Enumerate
-                 , Apropos.Gen.Range
-                 , Apropos.Pure
+  exposed-modules: Apropos.HasResourceBounds
                  , Apropos.Script
                  , Apropos.Tx
                  , Apropos.Tx.Arrow
@@ -110,6 +95,7 @@ test-suite examples
     Spec.Plutarch.CostModel
   build-depends:
     base,
+    apropos,
     apropos-tx,
     plutarch,
     tasty,
