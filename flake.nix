@@ -59,11 +59,14 @@
 
             additional = ps: [
               ps.plutarch
+              ps.apropos
             ];
           };
           sha256map = {
-            "https://github.com/Plutonomicon/plutarch"."8d333bd622082bf83e570a9d26c2f62db580b139"
-              = "sha256-h1aAwaDZOmJNIeR4uCsHJfU+KJTSMsPkPSC0dXp4v70=";
+            "https://github.com/Plutonomicon/plutarch"."f8b7eb06184112ae2bebdec5a8156010141a05d5"
+              = "sha256-y9lalsaTFVEPCoE/P8d4bduJJLSBvVpo/791mI9kcO4=";
+            "https://github.com/mlabs-haskell/apropos"."2b2c2e01f9a3d40a3db2dfcbdb24683d584f808d"
+              = "sha256-o9bEo9LTTfM5f/yapqLzXhxFF6XVbLTUKx1GvzJmfE0=";
             "https://github.com/input-output-hk/plutus.git"."6d8d25d1e84b2a4278da1036aab23da4161b8df8"
               = "o8m86TkI1dTo74YbE9CPPNrBfSDSrf//DMq+v2+woEY=";
             "https://github.com/Quid2/flat.git"."ee59880f47ab835dbd73bea0847dab7869fc20d8"

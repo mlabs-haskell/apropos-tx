@@ -3,7 +3,14 @@
 source-repository-package
   type: git
   location: https://github.com/Plutonomicon/plutarch
-  tag: 8d333bd622082bf83e570a9d26c2f62db580b139
+  tag: f8b7eb06184112ae2bebdec5a8156010141a05d5
+
+source-repository-package
+  type: git
+  location: https://github.com/mlabs-haskell/apropos
+  tag: 2b2c2e01f9a3d40a3db2dfcbdb24683d584f808d
+
+
 
 source-repository-package
   type: git
