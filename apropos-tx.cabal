@@ -67,6 +67,7 @@ library
                  , Apropos.LogicalModel.Formula
                  , Apropos.LogicalModel.Enumerable
                  , Apropos.LogicalModel.Enumerable.TH
+                 , Apropos.HasResourceBounds
                  , Apropos.HasLogicalModel
                  , Apropos.HasParameterisedGenerator
                  , Apropos.HasPermutationGenerator
@@ -82,6 +83,7 @@ library
                  , Apropos.Tx.Arrow
                  , Apropos.Tx.Arrow.Runner
                  , Apropos.Tx.Constraint
+                 , Apropos.Tx.Constraint.Runner
                  , Apropos.Tx.Constraint.Policy
   hs-source-dirs:  src
 
@@ -94,6 +96,7 @@ test-suite examples
   other-modules:
     Spec.Int
     Spec.IntArrow
+    Spec.IntConstraint
     Spec.IntPermutationGen
     Spec.IntPair
     Spec.TicTacToe.Player
