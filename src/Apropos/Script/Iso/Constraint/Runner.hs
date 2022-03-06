@@ -3,12 +3,13 @@ module Apropos.Script.Iso.Constraint.Runner (
   HasCPUBounds (..),
   runConstraintTestsWhere,
 ) where
-import Apropos.Script.Iso.Constraint
+
 import Apropos.Gen
 import Apropos.HasLogicalModel
 import Apropos.HasParameterisedGenerator
 import Apropos.HasResourceBounds
 import Apropos.LogicalModel
+import Apropos.Script.Iso.Constraint
 
 import Data.Set (Set)
 import Data.Set qualified as Set

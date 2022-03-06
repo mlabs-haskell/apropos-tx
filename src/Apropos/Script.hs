@@ -1,3 +1,2 @@
 module Apropos.Script (
-
   ) where

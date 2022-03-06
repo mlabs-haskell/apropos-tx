@@ -3,12 +3,13 @@ module Apropos.Script.Iso.Arrow.Runner (
   HasCPUBounds (..),
   runArrowTestsWhere,
 ) where
-import Apropos.Script.Iso.Arrow
+
 import Apropos.Gen
 import Apropos.HasLogicalModel
 import Apropos.HasParameterisedGenerator
 import Apropos.HasResourceBounds
 import Apropos.LogicalModel
+import Apropos.Script.Iso.Arrow
 
 import Data.Set (Set)
 import Data.Set qualified as Set

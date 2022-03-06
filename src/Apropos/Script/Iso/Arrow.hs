@@ -9,11 +9,11 @@ module Apropos.Script.Iso.Arrow (
 ) where
 
 import Apropos.Script.Iso.Constraint
+import Data.Bifunctor (bimap)
 import Plutarch
+import Plutarch.Builtin
 import Plutarch.Lift
 import Plutarch.Prelude
-import Plutarch.Builtin
-import Data.Bifunctor (bimap)
 
 type PlutarchArrow debruijn antecedent consequent = Term debruijn (antecedent :--> consequent)
 
@@ -73,9 +73,9 @@ data IsoArrow s a b = IsoArrow
     { haskArrow = \a -> (haskArrow x a, haskArrow y a)
     , plutarchArrow =
         plam $ \a ->
-            pdata
-              ( papp
-                  (papp ppairDataBuiltin (papp (plutarchArrow x) a))
-                  (papp (plutarchArrow y) a)
-              )
+          pdata
+            ( papp
+                (papp ppairDataBuiltin (papp (plutarchArrow x) a))
+                (papp (plutarchArrow y) a)
+            )
     }
