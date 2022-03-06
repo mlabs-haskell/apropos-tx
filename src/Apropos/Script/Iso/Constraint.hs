@@ -5,8 +5,8 @@ module Apropos.Script.Iso.Constraint (
   PlutarchConstraint,
   IsoConstraint (..),
   Tuple (..),
-  txEq,
-  txNeq,
+  constraintEq,
+  constraintNeq,
 ) where
 
 import Plutarch (POpaque, popaque)
@@ -46,10 +46,10 @@ instance Monoid (IsoConstraint debruijn a) where
       , plutarchConstraint = plam $ \_ -> popaque $ pcon PUnit
       }
 
-txNeq ::
+constraintNeq ::
   (Eq (PConstantRepr a)) =>
   IsoConstraint debruijn (Tuple a a)
-txNeq =
+constraintNeq =
   IsoConstraint
     { haskConstraint = uncurry (/=)
     , plutarchConstraint = plam $ \pp ->
@@ -59,10 +59,10 @@ txNeq =
           perror
     }
 
-txEq ::
+constraintEq ::
   (Eq (PConstantRepr a)) =>
   IsoConstraint debruijn (Tuple a a)
-txEq =
+constraintEq =
   IsoConstraint
     { haskConstraint = uncurry (==)
     , plutarchConstraint = plam $ \pp ->

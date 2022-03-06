@@ -49,10 +49,10 @@ intArrowB' =
     }
 
 intConstraintA :: IsoConstraint s Integer
-intConstraintA = (intArrowA &&&& intArrowB) >>>| txNeq
+intConstraintA = (intArrowA &&&& intArrowB) >>>| constraintNeq
 
 intConstraintB :: IsoConstraint s Integer
-intConstraintB = (intArrowA &&&& intArrowB) >>>> (intArrowA' <++> intArrowB') >>>| txEq
+intConstraintB = (intArrowA &&&& intArrowB) >>>> (intArrowA' <++> intArrowB') >>>| constraintEq
 
 -- this is not a good way to do the memoryBounds - they should just be args
 instance HasMemoryBounds (IsoConstraint s Integer) Integer where
