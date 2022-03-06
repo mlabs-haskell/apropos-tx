@@ -6,7 +6,7 @@ module Spec.Plutarch.CostModel (
 ) where
 
 import Apropos
-import Apropos.Script
+import Apropos.Script.Model
 
 import Data.Set qualified as Set
 
@@ -61,7 +61,7 @@ addCostPropGenTests =
               Yes
           ]
 
-instance HasScriptRunner CostModelProp Integer where
+instance ScriptModel CostModelProp Integer where
   script _ i = addCost i
   expect _ = Yes :: Formula CostModelProp
 

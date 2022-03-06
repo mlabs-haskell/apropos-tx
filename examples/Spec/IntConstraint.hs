@@ -5,8 +5,8 @@ module Spec.IntConstraint (
 ) where
 
 import Apropos
-import Apropos.Tx.Constraint
-import Apropos.Tx.Constraint.Runner
+import Apropos.Script.Iso.Constraint
+import Apropos.Script.Iso.Constraint.Runner
 import Plutarch
 import Plutarch.Prelude
 import Plutus.V1.Ledger.Api (ExCPU (..), ExMemory (..))
@@ -20,17 +20,17 @@ instance HasLogicalModel IntProp Integer where
 instance HasParameterisedGenerator IntProp Integer where
   parameterisedGenerator s = fromIntegral <$> (parameterisedGenerator s :: Gen Int)
 
-intConstraint :: TxConstraint s Integer
+intConstraint :: IsoConstraint s Integer
 intConstraint =
-  TxConstraint
+  IsoConstraint
     { haskConstraint = (9 <)
     , plutarchConstraint = plam $ \i -> popaque (pif (9 #< pfromData i) (pcon PUnit) perror)
     }
 
-instance HasMemoryBounds (TxConstraint s Integer) Integer where
+instance HasMemoryBounds (IsoConstraint s Integer) Integer where
   memoryBounds _ _ = (ExMemory minBound, ExMemory maxBound)
 
-instance HasCPUBounds (TxConstraint s Integer) Integer where
+instance HasCPUBounds (IsoConstraint s Integer) Integer where
   cpuBounds _ _ = (ExCPU minBound, ExCPU maxBound)
 
 intConstraintPlutarchTests :: TestTree

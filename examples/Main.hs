@@ -8,13 +8,6 @@ import Spec.IntPair
 import Spec.IntPermutationGen
 import Spec.Plutarch.CostModel
 import Spec.Plutarch.MagicNumber
-import Spec.TicTacToe.Location
-import Spec.TicTacToe.LocationSequence
-import Spec.TicTacToe.Move
-import Spec.TicTacToe.MoveSequence
-import Spec.TicTacToe.Player
-import Spec.TicTacToe.PlayerLocationSequencePair
-import Spec.TicTacToe.PlayerSequence
 import Test.Tasty
 
 main :: IO ()
@@ -43,16 +36,6 @@ tests =
         , intPairGenSelfTests
         , intPairGenPureTests
         , intPairGenPlutarchTests
-        ]
-    , testGroup
-        "TicTacToe"
-        [ playerPermutationGenSelfTest
-        , locationPermutationGenSelfTest
-        , movePermutationGenSelfTest
-        , playerSequencePermutationGenSelfTest
-        , locationSequencePermutationGenSelfTest
-        , playerLocationSequencePairPermutationGenSelfTest
-        , moveSequencePermutationGenSelfTest
         ]
     , testGroup
         "Script As Object"

@@ -1,25 +1,23 @@
 {-# LANGUAGE RankNTypes #-}
 
-module Apropos.Tx.Arrow (
-  TxArrow (..),
+module Apropos.Script.Iso.Arrow (
+  IsoArrow (..),
   (>>>>),
   (>>>|),
   (<++>),
   (&&&&),
 ) where
 
-import Apropos.Tx.Constraint
+import Apropos.Script.Iso.Constraint
+import Data.Bifunctor (bimap)
 import Plutarch
+import Plutarch.Builtin
 import Plutarch.Lift
 import Plutarch.Prelude
 
---import Plutarch.Api.V1.Tuple
-
-import Plutarch.Builtin
-
 type PlutarchArrow debruijn antecedent consequent = Term debruijn (antecedent :--> consequent)
 
-data TxArrow s a b = TxArrow
+data IsoArrow s a b = IsoArrow
   { haskArrow :: PConstantRepr a -> PConstantRepr b
   , plutarchArrow :: PlutarchArrow s (PAsData (PConstanted a)) (PAsData (PConstanted b))
   }
@@ -27,34 +25,34 @@ data TxArrow s a b = TxArrow
 -- sequential arrow composition
 (>>>>) ::
   forall s a b c.
-  TxArrow s a b ->
-  TxArrow s b c ->
-  TxArrow s a c
+  IsoArrow s a b ->
+  IsoArrow s b c ->
+  IsoArrow s a c
 (>>>>) x y =
-  TxArrow
+  IsoArrow
     { haskArrow = haskArrow y . haskArrow x
     , plutarchArrow = plam $ \a -> plutarchArrow y # papp (plutarchArrow x) a
     }
 
 -- compose an arrow with a constraint
 (>>>|) ::
-  TxArrow s a b ->
-  TxConstraint s b ->
-  TxConstraint s a
+  IsoArrow s a b ->
+  IsoConstraint s b ->
+  IsoConstraint s a
 (>>>|) arr c =
-  TxConstraint
+  IsoConstraint
     { haskConstraint = haskConstraint c . haskArrow arr
     , plutarchConstraint = plam $ \a -> plutarchConstraint c # papp (plutarchArrow arr) a
     }
 
--- run TxArrows in parallel
+-- run IsoArrows in parallel
 (<++>) ::
-  TxArrow s a c ->
-  TxArrow s b d ->
-  TxArrow s (Tuple a b) (Tuple c d)
+  IsoArrow s a c ->
+  IsoArrow s b d ->
+  IsoArrow s (Tuple a b) (Tuple c d)
 (<++>) x y =
-  TxArrow
-    { haskArrow = Data.Bifunctor.bimap (haskArrow x) (haskArrow y)
+  IsoArrow
+    { haskArrow = bimap (haskArrow x) (haskArrow y)
     , plutarchArrow = plam $ \ac ->
         pdata
           ( papp
@@ -67,17 +65,17 @@ data TxArrow s a b = TxArrow
     }
 
 (&&&&) ::
-  TxArrow s a b ->
-  TxArrow s a c ->
-  TxArrow s a (Tuple b c)
+  IsoArrow s a b ->
+  IsoArrow s a c ->
+  IsoArrow s a (Tuple b c)
 (&&&&) x y =
-  TxArrow
+  IsoArrow
     { haskArrow = \a -> (haskArrow x a, haskArrow y a)
     , plutarchArrow =
         plam $ \a ->
-            pdata
-              ( papp
-                  (papp ppairDataBuiltin (papp (plutarchArrow x) a))
-                  (papp (plutarchArrow y) a)
-              )
+          pdata
+            ( papp
+                (papp ppairDataBuiltin (papp (plutarchArrow x) a))
+                (papp (plutarchArrow y) a)
+            )
     }

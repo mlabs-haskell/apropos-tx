@@ -9,7 +9,7 @@ import Plutus.V1.Ledger.Value (CurrencySymbol)
 data ConstraintPolicy = ConstraintPolicy CurrencySymbol MintingPolicy
 
 -- e.g.
---myConstraint :: TxConstraint ScriptContext debruijn PScriptContext
+--myConstraint :: IsoConstraint ScriptContext debruijn PScriptContext
 --myConstraint = undefined
 --
 --myConstraintPolicy :: ConstraintPolicy

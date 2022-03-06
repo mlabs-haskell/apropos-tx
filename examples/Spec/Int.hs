@@ -1,7 +1,7 @@
 module Spec.Int (HasParameterisedGenerator (..), HasLogicalModel (..), IntProp (..), intGenTests, intPureTests, intPlutarchTests) where
 
 import Apropos
-import Apropos.Script
+import Apropos.Script.Model
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.Hedgehog (fromGroup)
 
@@ -75,7 +75,7 @@ intPureTests =
       <$> [ runPureTestsWhere (Apropos :: Int :+ IntProp) "AcceptsSmallNegativeInts" Yes
           ]
 
-instance HasScriptRunner IntProp Int where
+instance ScriptModel IntProp Int where
   expect _ = Var IsSmall :&&: Var IsNegative
   script _ i =
     let ii = fromIntegral i :: Integer

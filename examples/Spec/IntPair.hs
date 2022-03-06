@@ -8,7 +8,7 @@ module Spec.IntPair (
 ) where
 
 import Apropos
-import Apropos.Script
+import Apropos.Script.Model
 
 import Control.Lens.Tuple (_1, _2)
 import Control.Monad (join)
@@ -86,7 +86,7 @@ intPairGenPureTests =
               Yes
           ]
 
-instance HasScriptRunner IntPairProp (Int, Int) where
+instance ScriptModel IntPairProp (Int, Int) where
   expect _ =
     All $
       Var

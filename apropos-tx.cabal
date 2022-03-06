@@ -64,11 +64,12 @@ library
   import:          lang
   exposed-modules: Apropos.HasResourceBounds
                  , Apropos.Script
+                 , Apropos.Script.Model
+                 , Apropos.Script.Iso.Arrow
+                 , Apropos.Script.Iso.Arrow.Runner
+                 , Apropos.Script.Iso.Constraint
+                 , Apropos.Script.Iso.Constraint.Runner
                  , Apropos.Tx
-                 , Apropos.Tx.Arrow
-                 , Apropos.Tx.Arrow.Runner
-                 , Apropos.Tx.Constraint
-                 , Apropos.Tx.Constraint.Runner
                  , Apropos.Tx.Constraint.Policy
   hs-source-dirs:  src
 
@@ -85,13 +86,6 @@ test-suite examples
     Spec.IntConstraint
     Spec.IntPermutationGen
     Spec.IntPair
-    Spec.TicTacToe.Player
-    Spec.TicTacToe.PlayerSequence
-    Spec.TicTacToe.Location
-    Spec.TicTacToe.LocationSequence
-    Spec.TicTacToe.PlayerLocationSequencePair
-    Spec.TicTacToe.Move
-    Spec.TicTacToe.MoveSequence
     Spec.Plutarch.MagicNumber
     Spec.Plutarch.CostModel
   build-depends:

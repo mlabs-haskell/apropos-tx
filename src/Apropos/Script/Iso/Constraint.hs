@@ -1,12 +1,12 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Apropos.Tx.Constraint (
+module Apropos.Script.Iso.Constraint (
   PlutarchConstraint,
-  TxConstraint (..),
+  IsoConstraint (..),
   Tuple (..),
-  txEq,
-  txNeq,
+  constraintEq,
+  constraintNeq,
 ) where
 
 import Plutarch (POpaque, popaque)
@@ -16,15 +16,15 @@ import Plutarch.Prelude
 -- where POpaque is a truthy value e.g. perror = False, PUnit = True
 type PlutarchConstraint debruijn domain = Term debruijn (domain :--> POpaque)
 
-data TxConstraint debruijn domain = TxConstraint
+data IsoConstraint debruijn domain = IsoConstraint
   { haskConstraint :: PConstantRepr domain -> Bool
   , plutarchConstraint :: PlutarchConstraint debruijn (PAsData (PConstanted domain))
   }
 
 -- this is like && for constraints on the same type
-instance Semigroup (TxConstraint debruijn a) where
+instance Semigroup (IsoConstraint debruijn a) where
   (<>) a b =
-    TxConstraint
+    IsoConstraint
       { haskConstraint = \c -> haskConstraint a c && haskConstraint b c
       , plutarchConstraint =
           plutarchConstraint a
@@ -39,18 +39,18 @@ plutarchConstraintSemigroup x y = plam $ \a -> opaqueSemigroup (papp x a) (papp 
   where
     opaqueSemigroup ig nor = papp (papp (plam $ \_ig _nor -> popaque $ pcon PUnit) ig) nor
 
-instance Monoid (TxConstraint debruijn a) where
+instance Monoid (IsoConstraint debruijn a) where
   mempty =
-    TxConstraint
+    IsoConstraint
       { haskConstraint = const True
       , plutarchConstraint = plam $ \_ -> popaque $ pcon PUnit
       }
 
-txNeq ::
+constraintNeq ::
   (Eq (PConstantRepr a)) =>
-  TxConstraint debruijn (Tuple a a)
-txNeq =
-  TxConstraint
+  IsoConstraint debruijn (Tuple a a)
+constraintNeq =
+  IsoConstraint
     { haskConstraint = uncurry (/=)
     , plutarchConstraint = plam $ \pp ->
         pif
@@ -59,11 +59,11 @@ txNeq =
           perror
     }
 
-txEq ::
+constraintEq ::
   (Eq (PConstantRepr a)) =>
-  TxConstraint debruijn (Tuple a a)
-txEq =
-  TxConstraint
+  IsoConstraint debruijn (Tuple a a)
+constraintEq =
+  IsoConstraint
     { haskConstraint = uncurry (==)
     , plutarchConstraint = plam $ \pp ->
         pif
