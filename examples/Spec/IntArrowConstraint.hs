@@ -20,45 +20,45 @@ instance HasLogicalModel IntProp Integer where
 instance HasParameterisedGenerator IntProp Integer where
   parameterisedGenerator s = fromIntegral <$> (parameterisedGenerator s :: Gen Int)
 
-intArrowA :: TxArrow s Integer Integer
+intArrowA :: IsoArrow s Integer Integer
 intArrowA =
-  TxArrow
+  IsoArrow
     { haskArrow = (+ 10)
     , plutarchArrow = plam $ \i -> pdata $ pfromData i + 10
     }
 
-intArrowA' :: TxArrow s Integer Integer
+intArrowA' :: IsoArrow s Integer Integer
 intArrowA' =
-  TxArrow
+  IsoArrow
     { haskArrow = \i -> i - 10
     , plutarchArrow = plam $ \i -> pdata $ pfromData i - 10
     }
 
-intArrowB :: TxArrow s Integer Integer
+intArrowB :: IsoArrow s Integer Integer
 intArrowB =
-  TxArrow
+  IsoArrow
     { haskArrow = (+ 5)
     , plutarchArrow = plam $ \i -> pdata $ pfromData i + 5
     }
 
-intArrowB' :: TxArrow s Integer Integer
+intArrowB' :: IsoArrow s Integer Integer
 intArrowB' =
-  TxArrow
+  IsoArrow
     { haskArrow = \i -> i - 5
     , plutarchArrow = plam $ \i -> pdata $ pfromData i - 5
     }
 
-intConstraintA :: TxConstraint s Integer
+intConstraintA :: IsoConstraint s Integer
 intConstraintA = (intArrowA &&&& intArrowB) >>>| txNeq
 
-intConstraintB :: TxConstraint s Integer
+intConstraintB :: IsoConstraint s Integer
 intConstraintB = (intArrowA &&&& intArrowB) >>>> (intArrowA' <++> intArrowB') >>>| txEq
 
 -- this is not a good way to do the memoryBounds - they should just be args
-instance HasMemoryBounds (TxConstraint s Integer) Integer where
+instance HasMemoryBounds (IsoConstraint s Integer) Integer where
   memoryBounds _ _ = (ExMemory minBound, ExMemory maxBound)
 
-instance HasCPUBounds (TxConstraint s Integer) Integer where
+instance HasCPUBounds (IsoConstraint s Integer) Integer where
   cpuBounds _ _ = (ExCPU minBound, ExCPU maxBound)
 
 intArrowConstraintPlutarchTests :: TestTree

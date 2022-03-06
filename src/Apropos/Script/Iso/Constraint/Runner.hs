@@ -42,22 +42,22 @@ import Unsafe.Coerce
 type ConstraintTest p s a =
   ( HasLogicalModel p (PConstantRepr a)
   , HasParameterisedGenerator p (PConstantRepr a)
-  , HasMemoryBounds (TxConstraint s a) a
-  , HasCPUBounds (TxConstraint s a) a
+  , HasMemoryBounds (IsoConstraint s a) a
+  , HasCPUBounds (IsoConstraint s a) a
   , PConstant a
   , PLifted (PConstanted a) ~ a
   , PIsData (PConstanted a)
   , PConstantRepr a ~ a
   )
 
-runConstraintTestsWhere :: ConstraintTest p s a => TxConstraint s a -> String -> Formula p -> Group
+runConstraintTestsWhere :: ConstraintTest p s a => IsoConstraint s a -> String -> Formula p -> Group
 runConstraintTestsWhere constraint name condition =
   Group (fromString name) $
     [ (fromString $ show $ Set.toList scenario, runConstraintTest constraint scenario)
     | scenario <- enumerateScenariosWhere condition
     ]
 
-runConstraintTest :: ConstraintTest p s a => TxConstraint s a -> Set p -> Property
+runConstraintTest :: ConstraintTest p s a => IsoConstraint s a -> Set p -> Property
 runConstraintTest constraint targetProperties = genProp $ do
   (f :: f) <- parameterisedGenerator targetProperties
   let testScript = papp (plutarchConstraint constraint) (pdata $ pconstant f)
@@ -67,13 +67,13 @@ runConstraintTest constraint targetProperties = genProp $ do
     Left err -> failWithFootnote (show err)
 
 deliverResult ::
-  ( HasMemoryBounds (TxConstraint s a) a
-  , HasCPUBounds (TxConstraint s a) a
+  ( HasMemoryBounds (IsoConstraint s a) a
+  , HasCPUBounds (IsoConstraint s a) a
   , Show a
   , Show p
   , PConstant a
   ) =>
-  TxConstraint s a ->
+  IsoConstraint s a ->
   a ->
   Set p ->
   Either ([Text], String) (ExBudget, [Text]) ->

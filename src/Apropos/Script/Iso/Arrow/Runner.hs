@@ -42,8 +42,8 @@ import Unsafe.Coerce
 type ArrowTest p s a b =
   ( HasLogicalModel p (PConstantRepr a)
   , HasParameterisedGenerator p (PConstantRepr a)
-  , HasMemoryBounds (TxArrow s a b) a
-  , HasCPUBounds (TxArrow s a b) a
+  , HasMemoryBounds (IsoArrow s a b) a
+  , HasCPUBounds (IsoArrow s a b) a
   , PConstant a
   , PConstant b
   , PLifted (PConstanted a) ~ a
@@ -55,14 +55,14 @@ type ArrowTest p s a b =
   , PEq (PConstanted b)
   )
 
-runArrowTestsWhere :: ArrowTest p s a b => TxArrow s a b -> String -> Formula p -> Group
+runArrowTestsWhere :: ArrowTest p s a b => IsoArrow s a b -> String -> Formula p -> Group
 runArrowTestsWhere arrow name condition =
   Group (fromString name) $
     [ (fromString $ show $ Set.toList scenario, runArrowTest arrow scenario)
     | scenario <- enumerateScenariosWhere condition
     ]
 
-runArrowTest :: ArrowTest p s a b => TxArrow s a b -> Set p -> Property
+runArrowTest :: ArrowTest p s a b => IsoArrow s a b -> Set p -> Property
 runArrowTest arrow targetProperties = genProp $ do
   (f :: f) <- parameterisedGenerator targetProperties
   let expect = haskArrow arrow f
@@ -77,12 +77,12 @@ runArrowTest arrow targetProperties = genProp $ do
     Left err -> failWithFootnote (show err)
 
 deliverResult ::
-  ( HasMemoryBounds (TxArrow s a b) a
-  , HasCPUBounds (TxArrow s a b) a
+  ( HasMemoryBounds (IsoArrow s a b) a
+  , HasCPUBounds (IsoArrow s a b) a
   , Show a
   , Show p
   ) =>
-  TxArrow s a b ->
+  IsoArrow s a b ->
   a ->
   Set p ->
   Either ([Text], String) (ExBudget, [Text]) ->
