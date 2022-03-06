@@ -1,15 +1,15 @@
-module Apropos.Tx.Constraint.Runner (
+module Apropos.Script.Iso.Arrow.Runner (
   HasMemoryBounds (..),
   HasCPUBounds (..),
-  runConstraintTestsWhere,
+  runArrowTestsWhere,
 ) where
-
+import Apropos.Script.Iso.Arrow
 import Apropos.Gen
 import Apropos.HasLogicalModel
 import Apropos.HasParameterisedGenerator
 import Apropos.HasResourceBounds
 import Apropos.LogicalModel
-import Apropos.Tx.Constraint
+
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.String (fromString)
@@ -39,56 +39,62 @@ import Text.PrettyPrint qualified as PP
 import Text.Show.Pretty (ppDoc)
 import Unsafe.Coerce
 
-type ConstraintTest p s a =
+type ArrowTest p s a b =
   ( HasLogicalModel p (PConstantRepr a)
   , HasParameterisedGenerator p (PConstantRepr a)
-  , HasMemoryBounds (TxConstraint s a) a
-  , HasCPUBounds (TxConstraint s a) a
+  , HasMemoryBounds (TxArrow s a b) a
+  , HasCPUBounds (TxArrow s a b) a
   , PConstant a
+  , PConstant b
   , PLifted (PConstanted a) ~ a
+  , PLifted (PConstanted b) ~ b
   , PIsData (PConstanted a)
+  , PIsData (PConstanted b)
   , PConstantRepr a ~ a
+  , PConstantRepr b ~ b
+  , PEq (PConstanted b)
   )
 
-runConstraintTestsWhere :: ConstraintTest p s a => TxConstraint s a -> String -> Formula p -> Group
-runConstraintTestsWhere constraint name condition =
+runArrowTestsWhere :: ArrowTest p s a b => TxArrow s a b -> String -> Formula p -> Group
+runArrowTestsWhere arrow name condition =
   Group (fromString name) $
-    [ (fromString $ show $ Set.toList scenario, runConstraintTest constraint scenario)
+    [ (fromString $ show $ Set.toList scenario, runArrowTest arrow scenario)
     | scenario <- enumerateScenariosWhere condition
     ]
 
-runConstraintTest :: ConstraintTest p s a => TxConstraint s a -> Set p -> Property
-runConstraintTest constraint targetProperties = genProp $ do
+runArrowTest :: ArrowTest p s a b => TxArrow s a b -> Set p -> Property
+runArrowTest arrow targetProperties = genProp $ do
   (f :: f) <- parameterisedGenerator targetProperties
-  let testScript = papp (plutarchConstraint constraint) (pdata $ pconstant f)
+  let expect = haskArrow arrow f
+      testScript =
+        pif
+          (pdata (pconstant expect) #== papp (plutarchArrow arrow) (pdata $ pconstant f))
+          (pcon PUnit)
+          perror
   case evaluateScript $ compile $ unsafeCoerce testScript of
-    Left (EvaluationError logs err) -> deliverResult constraint f targetProperties (Left (logs, err))
-    Right res -> deliverResult constraint f targetProperties (Right res)
+    Left (EvaluationError logs err) -> deliverResult arrow f targetProperties (Left (logs, err))
+    Right res -> deliverResult arrow f targetProperties (Right res)
     Left err -> failWithFootnote (show err)
 
 deliverResult ::
-  ( HasMemoryBounds (TxConstraint s a) a
-  , HasCPUBounds (TxConstraint s a) a
+  ( HasMemoryBounds (TxArrow s a b) a
+  , HasCPUBounds (TxArrow s a b) a
   , Show a
   , Show p
-  , PConstant a
   ) =>
-  TxConstraint s a ->
+  TxArrow s a b ->
   a ->
   Set p ->
   Either ([Text], String) (ExBudget, [Text]) ->
   Gen ()
-deliverResult constraint input inputProps res = do
-  let expect = haskConstraint constraint (pconstantToRepr input)
-  case (expect, res) of
-    (False, Left _) -> pure ()
-    (True, Right (cost, _)) -> successWithBudgetCheck cost
-    (True, Left err) -> failWithFootnote $ unexpectedFailure err
-    (False, Right (_, logs)) -> failWithFootnote $ unexpectedSuccess logs
+deliverResult arrow input inputProps res =
+  case res of
+    (Right (cost, _)) -> successWithBudgetCheck cost
+    (Left err) -> failWithFootnote $ unexpectedFailure err
   where
     successWithBudgetCheck :: ExBudget -> Gen ()
     successWithBudgetCheck cost@(ExBudget cpu mem) =
-      if inInterval cpu (cpuBounds constraint input) && inInterval mem (memoryBounds constraint input)
+      if inInterval cpu (cpuBounds arrow input) && inInterval mem (memoryBounds arrow input)
         then pure ()
         else failWithFootnote $ budgetCheckFailure cost
       where
@@ -98,17 +104,13 @@ deliverResult constraint input inputProps res = do
     budgetCheckFailure cost =
       renderStyle ourStyle $
         "Success! But at what cost?"
-          $+$ hang "Lower Bound" 4 (ppDoc (ExBudget (fst (cpuBounds constraint input)) (fst (memoryBounds constraint input))))
+          $+$ hang "Lower Bound" 4 (ppDoc (ExBudget (fst (cpuBounds arrow input)) (fst (memoryBounds arrow input))))
           $+$ hang "Actual Cost" 4 (ppDoc cost)
-          $+$ hang "Upper Bound" 4 (ppDoc (ExBudget (snd (cpuBounds constraint input)) (snd (memoryBounds constraint input))))
+          $+$ hang "Upper Bound" 4 (ppDoc (ExBudget (snd (cpuBounds arrow input)) (snd (memoryBounds arrow input))))
     unexpectedFailure :: ([Text], String) -> String
     unexpectedFailure (logs, reason) =
       renderStyle ourStyle $
         text ("Unexpected failure(" <> reason <> ")") $+$ dumpState logs
-    unexpectedSuccess :: [Text] -> String
-    unexpectedSuccess logs =
-      renderStyle ourStyle $
-        "Unexpected success" $+$ dumpState logs
     dumpState :: [Text] -> Doc
     dumpState logs =
       ""

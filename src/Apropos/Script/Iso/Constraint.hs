@@ -1,7 +1,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Apropos.Tx.Constraint (
+module Apropos.Script.Iso.Constraint (
   PlutarchConstraint,
   TxConstraint (..),
   Tuple (..),

@@ -7,7 +7,7 @@ module Spec.IntPermutationGen (
 ) where
 
 import Apropos
-import Apropos.Script
+import Apropos.Script.Model
 import Plutarch (compile)
 import Plutarch.Prelude
 import Test.Tasty (TestTree, testGroup)
@@ -111,7 +111,7 @@ intPermutationGenPureTests =
       <$> [ runPureTestsWhere (Apropos :: Int :+ IntProp) "AcceptsSmallNegativeInts" Yes
           ]
 
-instance HasScriptRunner IntProp Int where
+instance ScriptModel IntProp Int where
   expect _ = Var IsSmall :&&: Var IsNegative
   script _ i =
     let ii = fromIntegral i :: Integer

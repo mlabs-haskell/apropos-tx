@@ -5,9 +5,9 @@ module Spec.IntArrowConstraint (
 ) where
 
 import Apropos
-import Apropos.Tx.Arrow
-import Apropos.Tx.Constraint
-import Apropos.Tx.Constraint.Runner
+import Apropos.Script.Iso.Arrow
+import Apropos.Script.Iso.Constraint
+import Apropos.Script.Iso.Constraint.Runner
 import Plutarch.Prelude
 import Plutus.V1.Ledger.Api (ExCPU (..), ExMemory (..))
 import Spec.Int

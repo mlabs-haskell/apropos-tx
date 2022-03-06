@@ -5,8 +5,8 @@ module Spec.IntArrow (
 ) where
 
 import Apropos
-import Apropos.Tx.Arrow
-import Apropos.Tx.Arrow.Runner
+import Apropos.Script.Iso.Arrow
+import Apropos.Script.Iso.Arrow.Runner
 import Plutarch.Builtin
 import Plutarch.Prelude
 import Plutus.V1.Ledger.Api (ExCPU (..), ExMemory (..))

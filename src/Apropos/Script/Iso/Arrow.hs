@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 
-module Apropos.Tx.Arrow (
+module Apropos.Script.Iso.Arrow (
   TxArrow (..),
   (>>>>),
   (>>>|),
@@ -8,14 +8,12 @@ module Apropos.Tx.Arrow (
   (&&&&),
 ) where
 
-import Apropos.Tx.Constraint
+import Apropos.Script.Iso.Constraint
 import Plutarch
 import Plutarch.Lift
 import Plutarch.Prelude
-
---import Plutarch.Api.V1.Tuple
-
 import Plutarch.Builtin
+import Data.Bifunctor (bimap)
 
 type PlutarchArrow debruijn antecedent consequent = Term debruijn (antecedent :--> consequent)
 
@@ -54,7 +52,7 @@ data TxArrow s a b = TxArrow
   TxArrow s (Tuple a b) (Tuple c d)
 (<++>) x y =
   TxArrow
-    { haskArrow = Data.Bifunctor.bimap (haskArrow x) (haskArrow y)
+    { haskArrow = bimap (haskArrow x) (haskArrow y)
     , plutarchArrow = plam $ \ac ->
         pdata
           ( papp

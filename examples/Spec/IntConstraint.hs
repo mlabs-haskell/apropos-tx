@@ -5,8 +5,8 @@ module Spec.IntConstraint (
 ) where
 
 import Apropos
-import Apropos.Tx.Constraint
-import Apropos.Tx.Constraint.Runner
+import Apropos.Script.Iso.Constraint
+import Apropos.Script.Iso.Constraint.Runner
 import Plutarch
 import Plutarch.Prelude
 import Plutus.V1.Ledger.Api (ExCPU (..), ExMemory (..))

@@ -1,7 +1,7 @@
 # `apropos-tx`
 Plutus and Plutarch extensions for [apropos](https://github.com/mlabs-haskell/apropos).
 
-Generate a suite of property tests from a logical specification.
+Protocol Specifications as compositions of Arrows and Constraints.
 
 ## What is this?
 For more information please see the `examples` directory.
