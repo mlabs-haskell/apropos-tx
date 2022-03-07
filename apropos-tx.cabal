@@ -69,6 +69,7 @@ library
                  , Apropos.Script.Iso.Arrow.Runner
                  , Apropos.Script.Iso.Constraint
                  , Apropos.Script.Iso.Constraint.Runner
+                 , Apropos.Script.Iso.BinaryConstraint
                  , Apropos.Tx
                  , Apropos.Tx.Constraint.Policy
   hs-source-dirs:  src
