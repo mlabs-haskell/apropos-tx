@@ -1,29 +1,33 @@
 {-# LANGUAGE RankNTypes #-}
 
 module Apropos.Script.Iso.DSL (
-  NamedArrow(..),
-  UnaryConstraint(..),
-  BinaryConstraint(..),
+  NamedIsoArrow(..),
+  NamedIsoUnaryConstraint(..),
+  NamedIsoBinaryConstraint(..),
   haskUnaryConstraint,
 ) where
 import Plutarch
 import Plutarch.Lift
 import Plutarch.Api.V1.Tuple
 
-class NamedArrow arrow where
-  arrow :: (a -> b) -> arrow a b
-  unArrow :: arrow a b -> (a -> b)
-  arrowName :: arrow a b -> String
+class NamedIsoArrow arrow where
+  arrowName :: arrow s a b -> String
+  isoArrow :: (PLifted a -> PLifted b) -> PlutarchArrow s a b -> arrow s a b
+  hArrow :: arrow s a b -> (PLifted a -> PLifted b)
+  pArrow :: arrow s a b -> PlutarchArrow s a b
 
-class UnaryConstraint c where
-  unaryConstraint :: (a -> Bool) -> c a
-  unUnaryConstraint :: c a -> (a -> Bool)
-  unaryConstraintName :: c a -> String
 
-class BinaryConstraint c where
-  binaryConstraint :: (a -> b -> Bool) -> c a b
-  unBinaryConstraint :: c a b -> (a -> b -> Bool)
-  binaryConstraintName :: c a b -> String
+class NamedIsoUnaryConstraint constraint where
+  unaryConstraintName :: constraint s a -> String
+  unaryConstraint :: (PLifted a -> Bool) -> PlutarchUnaryConstraint s a -> constraint s a
+  hUnaryConstraint :: constraint s a -> (PLifted a -> Bool)
+  pUnaryConstraint :: constraint s a -> PlutarchUnaryConstraint s a
+
+class NamedIsoBinaryConstraint constraint where
+  binaryConstraintName :: constraint s a b -> String
+  binaryConstraint :: (PLifted a -> PLifted b -> Bool) -> PlutarchBinaryConstraint s a b -> constraint s a b
+  hBinaryConstraint :: constraint s a b -> (PLifted a -> PLifted b -> Bool)
+  pBinaryConstraint :: constraint s a b -> PlutarchBinaryConstraint s a b
 
 
 type PlutarchArrow s antecedent consequent = Term s (antecedent :--> consequent)
@@ -36,8 +40,7 @@ type PlutarchBinaryConstraint s domainL domainR = Term s (domainL :--> domainR :
 
 
 data IsoArrow s a b where
-  IsoArrow :: (PLift a, PLift b, NamedArrow arrow)
-           => arrow (PLifted a) (PLifted b) -> PlutarchArrow s a b -> IsoArrow s a b
+  IsoArrow :: NamedIsoArrow arrow => arrow s a b -> IsoArrow s a b
   IsoArrowSeq :: IsoArrow s a v -> IsoArrow s v b -> IsoArrow s a b
   IsoArrowFanout :: (b ~ PTuple bl br, PLifted (PTuple bl br) ~ (PLifted bl, PLifted br))
                  => IsoArrow s a bl -> IsoArrow s a br -> IsoArrow s a b
@@ -46,8 +49,8 @@ data IsoArrow s a b where
                    => IsoArrow s al bl -> IsoArrow s ar br -> IsoArrow s a b
 
 data IsoBinaryConstraint s a b where
-  IsoBinaryConstraint :: (PLift a, PLift b, BinaryConstraint c , Show (c (PLifted a) (PLifted b)))
-                      => c (PLifted a) (PLifted b) -> PlutarchBinaryConstraint s a b -> IsoBinaryConstraint s a b
+  IsoBinaryConstraint :: NamedIsoBinaryConstraint constraint
+                      => constraint s a b -> IsoBinaryConstraint s a b
   IsoBinaryConstraintAssoc :: IsoBinaryConstraint s a b -> IsoBinaryConstraint s a b -> IsoBinaryConstraint s a b
   IsoBinaryConstraintArrowLeft :: IsoArrow s a c -> IsoBinaryConstraint s c b -> IsoBinaryConstraint s a b
   IsoBinaryConstraintArrowRight :: IsoBinaryConstraint s a c -> IsoArrow s b c -> IsoBinaryConstraint s a b
@@ -57,31 +60,41 @@ data IsoBinaryConstraint s a b where
 
 
 data IsoUnaryConstraint s a where
-  IsoUnaryConstraint :: (PLift a, UnaryConstraint c, Show (c (PLifted a)))
-                     => c (PLifted a) -> PlutarchUnaryConstraint s a -> IsoUnaryConstraint s a
+  IsoUnaryConstraint :: NamedIsoUnaryConstraint constraint
+                     => constraint s a -> IsoUnaryConstraint s a
   IsoUnaryFromBinaryConstraint :: IsoBinaryConstraint s a a -> IsoUnaryConstraint s a
   IsoUnaryConstraintAssoc :: IsoUnaryConstraint s a -> IsoUnaryConstraint s a -> IsoUnaryConstraint s a
   IsoUnaryConstraintArrow :: IsoArrow s a b -> IsoUnaryConstraint s b -> IsoUnaryConstraint s a
 
 
 haskArrow :: IsoArrow s a b -> ((PLifted a) -> (PLifted b))
-haskArrow (IsoArrow a _) = unArrow a
+haskArrow (IsoArrow a) = hArrow a
 haskArrow (IsoArrowSeq l r) = haskArrow r . haskArrow l
 haskArrow (IsoArrowFanout l r) = \a -> ((haskArrow l) a, (haskArrow r) a)
 haskArrow (IsoArrowParallel l r) = \(al,ar) -> ((haskArrow l) al, (haskArrow r) ar)
 
 haskBinaryConstraint :: IsoBinaryConstraint s a b -> ((PLifted a) -> (PLifted b) -> Bool)
-haskBinaryConstraint (IsoBinaryConstraint c _) = unBinaryConstraint c
+haskBinaryConstraint (IsoBinaryConstraint c) = hBinaryConstraint c
 haskBinaryConstraint (IsoBinaryConstraintAssoc l r) = \a b -> (haskBinaryConstraint l) a b && (haskBinaryConstraint r) a b
 haskBinaryConstraint (IsoBinaryConstraintArrowLeft ar c) = \a b -> (haskBinaryConstraint c) (haskArrow ar $ a) b
 haskBinaryConstraint (IsoBinaryConstraintArrowRight c ar) = \a b -> (haskBinaryConstraint c) a (haskArrow ar $ b)
 haskBinaryConstraint (IsoBinaryConstraintArrowParallel ar c) = \a b -> uncurry (haskBinaryConstraint c) ((haskArrow ar) (a, b))
 
 haskUnaryConstraint :: IsoUnaryConstraint s a -> (PLifted a -> Bool)
-haskUnaryConstraint (IsoUnaryConstraint c _) = unUnaryConstraint c
+haskUnaryConstraint (IsoUnaryConstraint c) = hUnaryConstraint c
 haskUnaryConstraint (IsoUnaryFromBinaryConstraint bc) = \a -> (haskBinaryConstraint bc) a a
 haskUnaryConstraint (IsoUnaryConstraintAssoc l r) = \a -> (haskUnaryConstraint l) a && (haskUnaryConstraint r) a
 haskUnaryConstraint (IsoUnaryConstraintArrow ar c) = \a -> (haskUnaryConstraint c) ((haskArrow ar) a)
+
+
+plutarchArrow :: IsoArrow s a b -> PlutarchArrow s a b
+plutarchArrow (IsoArrow a) = pArrow a
+
+plutarchBinaryConstraint :: IsoBinaryConstraint s a b -> PlutarchArrow s a b
+plutarchBinaryConstraint (IsoBinaryConstraintArrowParallel (IsoArrowParallel l r) c) =
+  plutarchBinaryConstraint $ IsoBinaryConstraintArrowRight (IsoBinaryConstraintArrowLeft l c) r
+
+
 
 
 
