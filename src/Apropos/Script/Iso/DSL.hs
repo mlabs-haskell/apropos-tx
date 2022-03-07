@@ -54,43 +54,77 @@ data BinaryConstraint s a b where
   BinaryConstraintAssoc :: BinaryConstraint s a b -> BinaryConstraint s a b -> BinaryConstraint s a b
   BinaryConstraintArrowLeft :: Arrow s a c -> BinaryConstraint s c b -> BinaryConstraint s a b
   BinaryConstraintArrowRight :: BinaryConstraint s a c -> Arrow s b c -> BinaryConstraint s a b
-  BinaryConstraintArrowParallel :: (ab ~ PTuple a b, PLifted (PTuple a b) ~ (PLifted a, PLifted b)
-                                      ,v ~ PTuple vl vr, PLifted (PTuple vl vr) ~ (PLifted vl, PLifted vr))
-                                  => Arrow s ab v -> BinaryConstraint s vl vr -> BinaryConstraint s a b
-
+  BinaryConstraintArrowParallel :: (PIsData a, PIsData b, ab ~ PTuple a b, PLifted (PTuple a b) ~ (PLifted a, PLifted b)
+                                   ,PIsData vl, PIsData vr, v ~ PTuple vl vr, PLifted (PTuple vl vr) ~ (PLifted vl, PLifted vr))
+                                => Arrow s ab v -> BinaryConstraint s vl vr -> BinaryConstraint s a b
 
 data UnaryConstraint s a where
   UnaryConstraint :: NamedUnaryConstraint constraint
-                     => constraint s a -> UnaryConstraint s a
+                  => constraint s a -> UnaryConstraint s a
   UnaryFromBinaryConstraint :: BinaryConstraint s a a -> UnaryConstraint s a
   UnaryConstraintAssoc :: UnaryConstraint s a -> UnaryConstraint s a -> UnaryConstraint s a
   UnaryConstraintArrow :: Arrow s a b -> UnaryConstraint s b -> UnaryConstraint s a
-  UnaryConstraintFanoutBinary ::  (v ~ PTuple vl vr, PLifted (PTuple vl vr) ~ (PLifted vl, PLifted vr))
-                                  => Arrow s a v -> BinaryConstraint s vl vr -> UnaryConstraint s a
+  UnaryConstraintFanoutBinary :: (PIsData vl, PIsData vr, v ~ PTuple vl vr, PLifted (PTuple vl vr) ~ (PLifted vl, PLifted vr))
+                              => Arrow s a v -> BinaryConstraint s vl vr -> UnaryConstraint s a
 
 compileArrow :: Arrow s a b -> PlutarchArrow s a b
 compileArrow (Arrow a) = arrow a
 compileArrow (ArrowSeq l r) =
   plam $ \a -> papp (compileArrow r) (papp (compileArrow l) a)
-compileArrow (ArrowFanout l r) =
+compileArrow (ArrowFanout l r) = -- this reification of the tuple can be avoided by compileUnaryConstraint
   plam $ \a -> papp (papp ptuple (pdata (papp (compileArrow l) a))) (pdata (papp (compileArrow r) a))
-compileArrow (ArrowParallel l r) =
+compileArrow (ArrowParallel l r) = -- this reification of the tuple can be avoided by compileBinaryConstraint
   plam $ \alar->
     let bip = pfromData $ pbuiltinPairFromTuple $ pdata alar
         bl = pdata $ papp (compileArrow l) $ pfromData $ papp pfstBuiltin bip
         br = pdata $ papp (compileArrow r) $ pfromData $ papp psndBuiltin bip
       in papp (papp ptuple bl) br
 
+opaqueSemigroup :: Term s a -> Term s b -> Term s POpaque
+opaqueSemigroup ign ore = papp (papp (plam $ \_ign _ore -> popaque $ pcon PUnit) ign) ore
 
 compileBinaryConstraint :: BinaryConstraint s a b -> PlutarchBinaryConstraint s a b
-compileBinaryConstraint (BinaryConstraintArrowParallel (ArrowParallel l r) c) =
+compileBinaryConstraint (BinaryConstraint c) = binaryConstraint c
+compileBinaryConstraint (BinaryConstraintArrowParallel (ArrowParallel l r) c) = -- this avoids the tuple reification
   compileBinaryConstraint $ BinaryConstraintArrowRight (BinaryConstraintArrowLeft l c) r
-
+compileBinaryConstraint (BinaryConstraintArrowParallel arr c) = --TODO rewrite arrow to ArrowParallel if possible
+  plam $ \a ->
+    plam $ \b ->
+      let tup = papp (compileArrow arr) (papp (papp ptuple (pdata a)) (pdata b))
+          bip = pfromData $ pbuiltinPairFromTuple $ pdata tup
+          bl = pfromData $ papp pfstBuiltin bip
+          br = pfromData $ papp psndBuiltin bip
+       in papp (papp (compileBinaryConstraint c) bl) br
+compileBinaryConstraint (BinaryConstraintFlip c) =
+  plam $ \a ->
+    plam $ \b -> papp (papp (compileBinaryConstraint c) b) a
+compileBinaryConstraint (BinaryConstraintAssoc l r) =
+  plam $ \a ->
+    plam $ \b -> opaqueSemigroup (papp (papp (compileBinaryConstraint l) a) b) (papp (papp (compileBinaryConstraint r) a) b)
+compileBinaryConstraint (BinaryConstraintArrowLeft arr c) =
+  plam $ \a ->
+    plam $ \b ->
+      papp (papp (compileBinaryConstraint c) (papp (compileArrow arr) a)) b
+compileBinaryConstraint (BinaryConstraintArrowRight c arr) =
+  plam $ \a ->
+    plam $ \b ->
+      papp (papp (compileBinaryConstraint c) a) (papp (compileArrow arr) b)
 
 compileUnaryConstraint :: UnaryConstraint s a -> PlutarchUnaryConstraint s a
-compileUnaryConstraint (UnaryConstraintFanoutBinary (ArrowFanout l r) c) =
+compileUnaryConstraint (UnaryConstraint c) = unaryConstraint c
+compileUnaryConstraint (UnaryConstraintFanoutBinary (ArrowFanout l r) c) = -- this avoids the tuple reification
   compileUnaryConstraint (UnaryFromBinaryConstraint (BinaryConstraintArrowRight (BinaryConstraintArrowLeft l c) r))
-
-
-
+compileUnaryConstraint (UnaryFromBinaryConstraint c) =
+  plam $ \a -> papp (papp (compileBinaryConstraint c) a) a
+compileUnaryConstraint (UnaryConstraintAssoc l r) =
+  plam $ \a -> opaqueSemigroup (papp (compileUnaryConstraint l) a) (papp (compileUnaryConstraint r) a)
+compileUnaryConstraint (UnaryConstraintArrow arr c) =
+  plam $ \a -> papp (compileUnaryConstraint c) (papp (compileArrow arr) a)
+compileUnaryConstraint (UnaryConstraintFanoutBinary arr c) = --TODO rewrite arr to ArrowFanout if possible
+  plam $ \a ->
+    let tup = papp (compileArrow arr) a
+        bip = pfromData $ pbuiltinPairFromTuple $ pdata tup
+        bl = pfromData $ papp pfstBuiltin bip
+        br = pfromData $ papp psndBuiltin bip
+      in papp (papp (compileBinaryConstraint c) bl) br
 
