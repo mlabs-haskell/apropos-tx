@@ -51,41 +51,45 @@ type ConstraintTest p s a =
   , PConstantRepr a ~ a
   )
 
-runConstraintTestsWhere :: ConstraintTest p s a => IsoConstraint s a -> String -> Formula p -> Group
-runConstraintTestsWhere constraint name condition =
+runConstraintTestsWhere :: ConstraintTest p s a => Formula p -> IsoConstraint s a -> String -> Formula p -> Group
+runConstraintTestsWhere behaviour constraint name testFilter =
   Group (fromString name) $
-    [ (fromString $ show $ Set.toList scenario, runConstraintTest constraint scenario)
-    | scenario <- enumerateScenariosWhere condition
+    [ (fromString $ show $ Set.toList scenario, runConstraintTest behaviour constraint scenario)
+    | scenario <- enumerateScenariosWhere testFilter
     ]
 
-runConstraintTest :: ConstraintTest p s a => IsoConstraint s a -> Set p -> Property
-runConstraintTest constraint targetProperties = genProp $ do
+runConstraintTest :: ConstraintTest p s a => Formula p -> IsoConstraint s a -> Set p -> Property
+runConstraintTest behaviour constraint targetProperties = genProp $ do
   (f :: f) <- parameterisedGenerator targetProperties
   let testScript = papp (plutarchConstraint constraint) (pdata $ pconstant f)
   case evaluateScript $ compile $ unsafeCoerce testScript of
-    Left (EvaluationError logs err) -> deliverResult constraint f targetProperties (Left (logs, err))
-    Right res -> deliverResult constraint f targetProperties (Right res)
+    Left (EvaluationError logs err) -> deliverResult behaviour constraint f targetProperties (Left (logs, err))
+    Right res -> deliverResult behaviour constraint f targetProperties (Right res)
     Left err -> failWithFootnote (show err)
 
 deliverResult ::
   ( HasMemoryBounds (IsoConstraint s a) a
   , HasCPUBounds (IsoConstraint s a) a
   , Show a
-  , Show p
+  , LogicalModel p
   , PConstant a
   ) =>
+  Formula p ->
   IsoConstraint s a ->
   a ->
   Set p ->
   Either ([Text], String) (ExBudget, [Text]) ->
   Gen ()
-deliverResult constraint input inputProps res = do
-  let expect = haskConstraint constraint (pconstantToRepr input)
-  case (expect, res) of
-    (False, Left _) -> pure ()
-    (True, Right (cost, _)) -> successWithBudgetCheck cost
-    (True, Left err) -> failWithFootnote $ unexpectedFailure err
-    (False, Right (_, logs)) -> failWithFootnote $ unexpectedSuccess logs
+deliverResult behaviour constraint input inputProps res = do
+  let haskRes = haskConstraint constraint (pconstantToRepr input)
+      expect = satisfiesFormula behaviour inputProps
+  case ((expect, haskRes), res) of
+    ((False, False), Left _) -> pure ()
+    ((False, False), Right (_, logs)) -> failWithFootnote $ unexpectedSuccess logs
+    ((True, True), Right (cost, _)) -> successWithBudgetCheck cost
+    ((True, True), Left err) -> failWithFootnote $ unexpectedFailure err
+    -- TODO lift -- if we have a spec error we don't need to run the CEK machine
+    (specError, _) -> failWithFootnote $ specificationError specError
   where
     successWithBudgetCheck :: ExBudget -> Gen ()
     successWithBudgetCheck cost@(ExBudget cpu mem) =
@@ -110,6 +114,12 @@ deliverResult constraint input inputProps res = do
     unexpectedSuccess logs =
       renderStyle ourStyle $
         "Unexpected success" $+$ dumpState logs
+    specificationError :: (Bool, Bool) -> String
+    specificationError (expected, observed) =
+      renderStyle ourStyle $
+        "Specification Error"
+          $+$ hang "Expected" 4 (ppDoc expected)
+          $+$ hang "Observed" 4 (ppDoc observed)
     dumpState :: [Text] -> Doc
     dumpState logs =
       ""
