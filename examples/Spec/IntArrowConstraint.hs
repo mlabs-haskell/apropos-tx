@@ -14,6 +14,7 @@ import Spec.Int
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.Hedgehog (fromGroup)
 import Control.Category ((>>>))
+import qualified Control.Category as Cat
 
 instance HasLogicalModel IntProp Integer where
   satisfiesProperty p i = satisfiesProperty p (fromIntegral i :: Int)
@@ -53,9 +54,15 @@ intConstraintA :: IsoConstraint s Integer
 intConstraintA = (intArrowA &&&& intArrowB) >>>| constraintNeq
 
 intConstraintB :: IsoConstraint s Integer
-intConstraintB = ((intArrowA &&&& intArrowB) >>> (intArrowA' <++> intArrowB')) >>>| constraintEq
+intConstraintB = ((intArrowA &&&& intArrowB) >>> (intArrowA' <++> intArrowB')) >>>| constraintNeq
 
--- this is not a good way to do the memoryBounds - they should just be args
+intConstraintC :: IsoConstraint s Integer
+intConstraintC = ((Cat.id &&&& Cat.id)
+                  >>> ((intArrowA &&&& intArrowB) <++> (intArrowA &&&& intArrowB))
+                  >>> ((intArrowA' <++> intArrowB') <++> (intArrowA' <++> intArrowB'))) >>>| constraintEq
+
+-- this is not a good way to do the memoryBounds
+-- we want them to be parameterised by the type but there is probably a better way
 instance HasMemoryBounds (IsoConstraint s Integer) Integer where
   memoryBounds _ _ = (ExMemory minBound, ExMemory maxBound)
 
@@ -68,4 +75,5 @@ intArrowConstraintPlutarchTests =
     fromGroup
       <$> [ runConstraintTestsWhere intConstraintA "Plutarch Int Constraint A" (Yes :: Formula IntProp)
           , runConstraintTestsWhere intConstraintB "Plutarch Int Constraint B" (Yes :: Formula IntProp)
+          , runConstraintTestsWhere intConstraintC "Plutarch Int Constraint C" (Yes :: Formula IntProp)
           ]
