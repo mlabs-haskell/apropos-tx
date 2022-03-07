@@ -65,6 +65,8 @@ data IsoUnaryConstraint s a where
   IsoUnaryFromBinaryConstraint :: IsoBinaryConstraint s a a -> IsoUnaryConstraint s a
   IsoUnaryConstraintAssoc :: IsoUnaryConstraint s a -> IsoUnaryConstraint s a -> IsoUnaryConstraint s a
   IsoUnaryConstraintArrow :: IsoArrow s a b -> IsoUnaryConstraint s b -> IsoUnaryConstraint s a
+  IsoUnaryConstraintFanoutBinary ::  (v ~ PTuple vl vr, PLifted (PTuple vl vr) ~ (PLifted vl, PLifted vr))
+                                  => IsoArrow s a v -> IsoBinaryConstraint s vl vr -> IsoUnaryConstraint s a
 
 
 haskArrow :: IsoArrow s a b -> ((PLifted a) -> (PLifted b))
