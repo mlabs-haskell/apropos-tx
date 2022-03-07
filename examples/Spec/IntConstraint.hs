@@ -23,8 +23,9 @@ instance HasParameterisedGenerator IntProp Integer where
 intConstraint :: IsoConstraint s Integer
 intConstraint =
   IsoConstraint
-    { haskConstraint = (9 <)
-    , plutarchConstraint = plam $ \i -> popaque (pif (9 #< pfromData i) (pcon PUnit) perror)
+    { haskConstraint = \i -> i > 0 && i < 11
+    , plutarchConstraint = plam $ \i -> popaque (pif ((0 #< pfromData i) #&& (pfromData i #< 11))
+                                                     (pcon PUnit) perror)
     }
 
 instance HasMemoryBounds (IsoConstraint s Integer) Integer where
@@ -37,5 +38,8 @@ intConstraintPlutarchTests :: TestTree
 intConstraintPlutarchTests =
   testGroup "intConstraintPlutarchTests" $
     fromGroup
-      <$> [ runConstraintTestsWhere intConstraint "Plutarch Int Constraint" (Yes :: Formula IntProp)
+      <$> [ runConstraintTestsWhere (Var IsSmall :&&: Var IsPositive) -- when the constraint should be SAT
+                                    intConstraint
+                                    "Plutarch Int Constraint"
+                                    (Yes :: Formula IntProp) -- test suite filter
           ]
