@@ -13,6 +13,7 @@ import Plutus.V1.Ledger.Api (ExCPU (..), ExMemory (..))
 import Spec.Int
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.Hedgehog (fromGroup)
+import Control.Category ((>>>))
 
 instance HasLogicalModel IntProp Integer where
   satisfiesProperty p i = satisfiesProperty p (fromIntegral i :: Int)
@@ -52,7 +53,7 @@ intConstraintA :: IsoConstraint s Integer
 intConstraintA = (intArrowA &&&& intArrowB) >>>| constraintNeq
 
 intConstraintB :: IsoConstraint s Integer
-intConstraintB = (intArrowA &&&& intArrowB) >>>> (intArrowA' <++> intArrowB') >>>| constraintEq
+intConstraintB = ((intArrowA &&&& intArrowB) >>> (intArrowA' <++> intArrowB')) >>>| constraintEq
 
 -- this is not a good way to do the memoryBounds - they should just be args
 instance HasMemoryBounds (IsoConstraint s Integer) Integer where

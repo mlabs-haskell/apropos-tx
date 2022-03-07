@@ -2,7 +2,7 @@
 
 module Apropos.Script.Iso.Arrow (
   IsoArrow (..),
-  (>>>>),
+--  (>>>>),
   (>>>|),
   (<++>),
   (&&&&),
@@ -13,7 +13,7 @@ import Data.Bifunctor (bimap)
 import Plutarch
 import Plutarch.Builtin
 import Plutarch.Lift
-import Plutarch.Prelude
+import qualified Control.Category as Cat
 
 type PlutarchArrow debruijn antecedent consequent = Term debruijn (antecedent :--> consequent)
 
@@ -22,17 +22,12 @@ data IsoArrow s a b = IsoArrow
   , plutarchArrow :: PlutarchArrow s (PAsData (PConstanted a)) (PAsData (PConstanted b))
   }
 
--- sequential arrow composition
-(>>>>) ::
-  forall s a b c.
-  IsoArrow s a b ->
-  IsoArrow s b c ->
-  IsoArrow s a c
-(>>>>) x y =
-  IsoArrow
-    { haskArrow = haskArrow y . haskArrow x
-    , plutarchArrow = plam $ \a -> plutarchArrow y # papp (plutarchArrow x) a
-    }
+instance Cat.Category (IsoArrow s) where
+  id = IsoArrow { haskArrow = id, plutarchArrow = plam id }
+  (.) y x = IsoArrow
+      { haskArrow = haskArrow y . haskArrow x
+      , plutarchArrow = plam $ \a -> plutarchArrow y # papp (plutarchArrow x) a
+      }
 
 -- compose an arrow with a constraint
 (>>>|) ::
@@ -41,7 +36,7 @@ data IsoArrow s a b = IsoArrow
   IsoConstraint s a
 (>>>|) arr c =
   IsoConstraint
-    { haskConstraint = haskConstraint c . haskArrow arr
+    { haskConstraint = haskConstraint c Prelude.. haskArrow arr
     , plutarchConstraint = plam $ \a -> plutarchConstraint c # papp (plutarchArrow arr) a
     }
 
@@ -64,6 +59,7 @@ data IsoArrow s a b = IsoArrow
           )
     }
 
+-- fanout arrows
 (&&&&) ::
   IsoArrow s a b ->
   IsoArrow s a c ->
