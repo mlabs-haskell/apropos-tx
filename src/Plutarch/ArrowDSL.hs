@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 
-module Apropos.Script.Iso.DSL (
+module Plutarch.ArrowDSL (
   arrow,
   binaryConstraint,
   unaryConstraint,

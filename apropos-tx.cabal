@@ -69,9 +69,9 @@ library
                  , Apropos.Script.Iso.Arrow.Runner
                  , Apropos.Script.Iso.Constraint
                  , Apropos.Script.Iso.Constraint.Runner
-                 , Apropos.Script.Iso.DSL
                  , Apropos.Tx
                  , Apropos.Tx.Constraint.Policy
+                 , Plutarch.ArrowDSL
   hs-source-dirs:  src
 
 test-suite examples
