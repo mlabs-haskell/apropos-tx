@@ -2,18 +2,18 @@
 
 module Apropos.Script.Iso.Arrow (
   IsoArrow (..),
---  (>>>>),
+  --  (>>>>),
   (>>>|),
   (<++>),
   (&&&&),
 ) where
 
 import Apropos.Script.Iso.Constraint
+import Control.Category qualified as Cat
 import Data.Bifunctor (bimap)
 import Plutarch
 import Plutarch.Builtin
 import Plutarch.Lift
-import qualified Control.Category as Cat
 
 type PlutarchArrow debruijn antecedent consequent = Term debruijn (antecedent :--> consequent)
 
@@ -23,8 +23,9 @@ data IsoArrow s a b = IsoArrow
   }
 
 instance Cat.Category (IsoArrow s) where
-  id = IsoArrow { haskArrow = id, plutarchArrow = plam id }
-  (.) y x = IsoArrow
+  id = IsoArrow {haskArrow = id, plutarchArrow = plam id}
+  (.) y x =
+    IsoArrow
       { haskArrow = haskArrow y . haskArrow x
       , plutarchArrow = plam $ \a -> plutarchArrow y # papp (plutarchArrow x) a
       }

@@ -3,6 +3,7 @@ module Apropos.Script.Iso.Constraint.Runner (
   HasCPUBounds (..),
   runConstraintTestsWhere,
 ) where
+
 import Apropos.Gen
 import Apropos.HasLogicalModel
 import Apropos.HasParameterisedGenerator
@@ -83,10 +84,10 @@ deliverResult behaviour constraint input inputProps res = do
   let haskRes = haskConstraint constraint (pconstantToRepr input)
       expect = satisfiesFormula behaviour inputProps
   case ((expect, haskRes), res) of
-    ((False,False), Left _) -> pure ()
-    ((False,False), Right (_, logs)) -> failWithFootnote $ unexpectedSuccess logs
-    ((True,True), Right (cost, _)) -> successWithBudgetCheck cost
-    ((True,True), Left err) -> failWithFootnote $ unexpectedFailure err
+    ((False, False), Left _) -> pure ()
+    ((False, False), Right (_, logs)) -> failWithFootnote $ unexpectedSuccess logs
+    ((True, True), Right (cost, _)) -> successWithBudgetCheck cost
+    ((True, True), Left err) -> failWithFootnote $ unexpectedFailure err
     -- TODO lift -- if we have a spec error we don't need to run the CEK machine
     (specError, _) -> failWithFootnote $ specificationError specError
   where
@@ -113,12 +114,12 @@ deliverResult behaviour constraint input inputProps res = do
     unexpectedSuccess logs =
       renderStyle ourStyle $
         "Unexpected success" $+$ dumpState logs
-    specificationError :: (Bool,Bool) -> String
-    specificationError (expected,observed) =
+    specificationError :: (Bool, Bool) -> String
+    specificationError (expected, observed) =
       renderStyle ourStyle $
         "Specification Error"
-           $+$ hang "Expected" 4 (ppDoc expected)
-           $+$ hang "Observed" 4 (ppDoc observed)
+          $+$ hang "Expected" 4 (ppDoc expected)
+          $+$ hang "Observed" 4 (ppDoc observed)
     dumpState :: [Text] -> Doc
     dumpState logs =
       ""

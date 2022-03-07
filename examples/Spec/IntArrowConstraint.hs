@@ -8,13 +8,13 @@ import Apropos
 import Apropos.Script.Iso.Arrow
 import Apropos.Script.Iso.Constraint
 import Apropos.Script.Iso.Constraint.Runner
+import Control.Category ((>>>))
+import Control.Category qualified as Cat
 import Plutarch.Prelude
 import Plutus.V1.Ledger.Api (ExCPU (..), ExMemory (..))
 import Spec.Int
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.Hedgehog (fromGroup)
-import Control.Category ((>>>))
-import qualified Control.Category as Cat
 
 instance HasLogicalModel IntProp Integer where
   satisfiesProperty p i = satisfiesProperty p (fromIntegral i :: Int)
@@ -57,10 +57,12 @@ intConstraintB :: IsoConstraint s Integer
 intConstraintB = ((intArrowA &&&& intArrowB) >>> (intArrowA' <++> intArrowB')) >>>| constraintEq
 
 intConstraintC :: IsoConstraint s Integer
-intConstraintC = ((Cat.id &&&& Cat.id)
-                  >>> ((intArrowA &&&& intArrowB) <++> (intArrowA &&&& intArrowB))
-                  >>> ((intArrowA' <++> intArrowB') <++> (intArrowA' <++> intArrowB'))) >>>| constraintEq
-
+intConstraintC =
+  ( (Cat.id &&&& Cat.id)
+      >>> ((intArrowA &&&& intArrowB) <++> (intArrowA &&&& intArrowB))
+      >>> ((intArrowA' <++> intArrowB') <++> (intArrowA' <++> intArrowB'))
+  )
+    >>>| constraintEq
 
 intConstraintA' :: IsoConstraint s Integer
 intConstraintA' = (intArrowA &&&& intArrowB) >>>| constraintEq
@@ -69,10 +71,12 @@ intConstraintB' :: IsoConstraint s Integer
 intConstraintB' = ((intArrowA &&&& intArrowB) >>> (intArrowA' <++> intArrowB')) >>>| constraintNeq
 
 intConstraintC' :: IsoConstraint s Integer
-intConstraintC' = ((Cat.id &&&& Cat.id)
-                  >>> ((intArrowA &&&& intArrowB) <++> (intArrowA &&&& intArrowB))
-                  >>> ((intArrowA' <++> intArrowB') <++> (intArrowA' <++> intArrowB'))) >>>| constraintNeq
-
+intConstraintC' =
+  ( (Cat.id &&&& Cat.id)
+      >>> ((intArrowA &&&& intArrowB) <++> (intArrowA &&&& intArrowB))
+      >>> ((intArrowA' <++> intArrowB') <++> (intArrowA' <++> intArrowB'))
+  )
+    >>>| constraintNeq
 
 -- this is not a good way to do the memoryBounds
 -- we want them to be parameterised by the type but there is probably a better way
@@ -92,5 +96,4 @@ intArrowConstraintPlutarchTests =
           , runConstraintTestsWhere No intConstraintA' "Plutarch Int Constraint A'" (Yes :: Formula IntProp)
           , runConstraintTestsWhere No intConstraintB' "Plutarch Int Constraint B'" (Yes :: Formula IntProp)
           , runConstraintTestsWhere No intConstraintC' "Plutarch Int Constraint C'" (Yes :: Formula IntProp)
-
           ]

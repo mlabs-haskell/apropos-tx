@@ -24,8 +24,13 @@ intConstraint :: IsoConstraint s Integer
 intConstraint =
   IsoConstraint
     { haskConstraint = \i -> i > 0 && i < 11
-    , plutarchConstraint = plam $ \i -> popaque (pif ((0 #< pfromData i) #&& (pfromData i #< 11))
-                                                     (pcon PUnit) perror)
+    , plutarchConstraint = plam $ \i ->
+        popaque
+          ( pif
+              ((0 #< pfromData i) #&& (pfromData i #< 11))
+              (pcon PUnit)
+              perror
+          )
     }
 
 instance HasMemoryBounds (IsoConstraint s Integer) Integer where
@@ -38,8 +43,9 @@ intConstraintPlutarchTests :: TestTree
 intConstraintPlutarchTests =
   testGroup "intConstraintPlutarchTests" $
     fromGroup
-      <$> [ runConstraintTestsWhere (Var IsSmall :&&: Var IsPositive) -- when the constraint should be SAT
-                                    intConstraint
-                                    "Plutarch Int Constraint"
-                                    (Yes :: Formula IntProp) -- test suite filter
+      <$> [ runConstraintTestsWhere
+              (Var IsSmall :&&: Var IsPositive) -- when the constraint should be SAT
+              intConstraint
+              "Plutarch Int Constraint"
+              (Yes :: Formula IntProp) -- test suite filter
           ]
