@@ -1,5 +1,4 @@
 {-# LANGUAGE RankNTypes #-}
-
 module Plutarch.ArrowDSL (
   arrow,
   binaryConstraint,
@@ -112,6 +111,20 @@ data UnaryConstraint s a where
   UnaryConstraintArrow :: Arrow s a b -> UnaryConstraint s b -> UnaryConstraint s a
   UnaryConstraintFanoutBinary :: (PIsData vl, PIsData vr, v ~ PTuple vl vr, PLifted (PTuple vl vr) ~ (PLifted vl, PLifted vr))
                               => Arrow s a v -> BinaryConstraint s vl vr -> UnaryConstraint s a
+
+--normaliseArrow :: Arrow s a b -> Arrow s a b
+--normaliseArrow a@(Arrow _) = a
+--normaliseArrow a@(ArrowSeq (ArrowFanout _ _) (Arrow _)) = a
+--normaliseArrow (ArrowSeq a@(Arrow _) b) = ArrowSeq a (normaliseArrow b)
+--normaliseArrow (ArrowSeq a@(ArrowFanout _ _) b@(ArrowFanout _ _)) = ArrowSeq a (normaliseArrow b)
+--normaliseArrow (ArrowSeq (ArrowSeq l v) r) = normaliseArrow $ ArrowSeq l (ArrowSeq v r)
+--normaliseArrow (ArrowSeq (ArrowFanout l' r') (ArrowParallel l r)) =
+--  normaliseArrow $ ArrowFanout (ArrowSeq l' l) (ArrowSeq r' r)
+--normaliseArrow (ArrowSeq (ArrowParallel l' r') (ArrowParallel l r)) =
+--  normaliseArrow $ ArrowParallel (ArrowSeq l' l) (ArrowSeq r' r)
+--normaliseArrow (ArrowFanout a b) = ArrowFanout (normaliseArrow a) (normaliseArrow b)
+--normaliseArrow (ArrowParallel a b) = ArrowParallel (normaliseArrow a) (normaliseArrow b)
+
 
 compileArrow :: Arrow s a b -> PlutarchArrow s a b
 compileArrow (Arrow a) = a
