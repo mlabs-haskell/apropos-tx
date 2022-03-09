@@ -8,7 +8,7 @@ module Spec.IntPair (
 ) where
 
 import Apropos
-import Apropos.Script.Model
+import Apropos.Script
 
 import Control.Lens.Tuple (_1, _2)
 import Control.Monad (join)

@@ -1,7 +1,7 @@
 module Spec.Int (HasParameterisedGenerator (..), HasLogicalModel (..), IntProp (..), intGenTests, intPureTests, intPlutarchTests) where
 
 import Apropos
-import Apropos.Script.Model
+import Apropos.Script
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.Hedgehog (fromGroup)
 

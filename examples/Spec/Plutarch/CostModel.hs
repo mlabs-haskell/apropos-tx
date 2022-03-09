@@ -6,7 +6,7 @@ module Spec.Plutarch.CostModel (
 ) where
 
 import Apropos
-import Apropos.Script.Model
+import Apropos.Script
 
 import Data.Set qualified as Set
 
