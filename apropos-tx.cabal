@@ -73,6 +73,7 @@ library
                  , Apropos.Tx.Constraint.Policy
                  , Plutarch.ArrowDSL
                  , Plutarch.ShowProxyLiftedType
+                 , Plutarch.Wires
   hs-source-dirs:  src
 
 test-suite examples

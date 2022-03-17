@@ -25,6 +25,21 @@ import Plutarch
 import Plutarch.Prelude
 import Plutarch.Lift
 import Plutarch.Api.V1.Tuple
+--import GHC.TypeLits (Symbol)
+--import Data.Proxy
+
+--class PlutarchNode (node :: Symbol) s input output where
+--  plutarchNode :: Proxy node -> Term s (input :--> output)
+--
+--instance PlutarchNode "not" s PBool PBool where
+--  plutarchNode _ = pnot
+--
+--
+--class PlutarchNode2 (node :: Symbol) s input1 input2 output where
+--  plutarchNode2 :: Proxy node -> Term s (input1 :--> input2 :--> output)
+--
+--instance (PEq a) => PlutarchNode2 "eq" s a a PBool where
+--  plutarchNode2 _ = plam $ \a b -> a #== b
 
 type PlutarchArrow s a b = Term s (a :--> b)
 
