@@ -71,8 +71,6 @@ library
                  , Apropos.Script.Iso.Constraint.Runner
                  , Apropos.Tx
                  , Apropos.Tx.Constraint.Policy
-                 , Plutarch.ArrowDSL
-                 , Plutarch.ShowProxyLiftedType
                  , Plutarch.Wires
   hs-source-dirs:  src
 
