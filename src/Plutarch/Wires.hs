@@ -7,73 +7,42 @@ module Plutarch.Wires (
   eqNode,
   notNode,
   notEqDag,
-  eqNodeWyed,
   notEqDagBothExposed,
   ) where
 import Plutarch
 import Plutarch.Prelude
-import Plutarch.Unsafe (punsafeCoerce)
 import GHC.TypeLits
 import Data.Proxy
 
-data PDataOutputs (as :: [PType]) (s :: S) where
-  PDCons ::
-    forall x xs s.
-    Term s (PAsData x) ->
-    (Term s (PDataOutputs xs)) ->
-    PDataOutputs (x ': xs) s
-  PDNil :: PDataOutputs '[] s
-
-instance PlutusType (PDataOutputs (x ': xs)) where
-  type PInner (PDataOutputs (x ': xs)) _ = PBuiltinList PData
-  pcon' (PDCons x xs) = pto result
-    where
-      result :: Term _ (PDataOutputs (x ': xs))
-      result = pocons # x # xs
-  pmatch' l' f = plet l' $ \l ->
-    let x :: Term _ (PAsData x)
-        x = punsafeCoerce $ phead # l
-        xs :: Term _ (PDataOutputs xs)
-        xs = punsafeCoerce $ ptail # l
-     in f $ PDCons x xs
-
-instance PlutusType (PDataOutputs '[]) where
-  type PInner (PDataOutputs '[]) _ = PBuiltinList PData
-  pcon' PDNil = pnil
-  pmatch' _ f = f PDNil
-
-pocons :: forall a l s. Term s (PAsData a :--> PDataOutputs l :--> PDataOutputs (a ': l))
-pocons = punsafeCoerce $ pcons @PBuiltinList @PData
-
-ponil :: Term s (PDataOutputs '[])
-ponil = punsafeCoerce $ pnil @PBuiltinList @PData
-
-type PNode :: [PType] -> [PType] -> PType
+type PNode :: [PType] -> [PLabeledType] -> PType
 
 type family PNode is os where
   PNode (i ': is) os = i :--> (PNode is os)
-  PNode '[] os = PDataOutputs os
+  PNode '[] os = PDataRecord os
 
-eqNode :: forall i. PEq i => WiringDiagram '[i,i] '[PBool]
-eqNode = Node "eq" $ plam $ \a b -> pocons @PBool # (pdata (a #== b)) # ponil
+eqNode :: forall i. PEq i => WiringDiagram '[i,i] '["isEq" ':= PBool]
+eqNode = Node "eq" $ plam $ \a b -> pdcons @"isEq" @PBool # (pdata (a #== b)) # pdnil
 
-notNode :: WiringDiagram '[PBool] '[PBool]
-notNode = Node "not" $ plam $ \a -> pocons @PBool # (pdata (papp pnot a)) # ponil
+notNode :: WiringDiagram '[PBool] '["negated" ':= PBool]
+notNode = Node "not" $ plam $ \a -> pdcons @"negated" @PBool # (pdata (papp pnot a)) # pdnil
 
-notEqDag :: forall i. PEq i => WiringDiagram '[i,i] '[PBool]
-notEqDag = Wire (Proxy :: Proxy 0) (Proxy :: Proxy 0) eqNode notNode
+notEqDag :: forall i. PEq i => WiringDiagram '[i,i] '["negated" ':= PBool]
+notEqDag = Wire (Proxy :: Proxy "isEq") (Proxy :: Proxy 0) eqNode notNode
 
-eqNodeWyed :: forall i. PEq i => WiringDiagram '[i,i] '[PBool,PBool]
-eqNodeWyed = Wye (Proxy :: Proxy 0) eqNode
+notEqDagBothExposed :: forall i. PEq i => WiringDiagram '[i,i] '["isEq" ':= PBool, "negated" ':= PBool]
+notEqDagBothExposed = Wyre (Proxy :: Proxy "isEq") (Proxy :: Proxy 0) eqNode notNode
 
-notEqDagBothExposed :: forall i. PEq i => WiringDiagram '[i,i] '[PBool,PBool]
-notEqDagBothExposed = Wire (Proxy :: Proxy 0) (Proxy :: Proxy 0) eqNodeWyed notNode
+type ConsumeIndex :: Nat -> [a] -> [a]
 
-type Consume :: Nat -> [a] -> [a]
+type family ConsumeIndex n ps where
+  ConsumeIndex 0 (_ ': ps) = ps
+  ConsumeIndex n (p ': ps) = p ': (ConsumeIndex (n - 1) ps)
+  ConsumeIndex _ '[] = '[]
 
-type family Consume n ps where
-  Consume 0 (_ ': ps) = ps
-  Consume n (p ': ps) = p ': (Consume (n - 1) ps)
+type Consume :: Symbol -> [PLabeledType] -> [PLabeledType]
+type family Consume s ps where
+  Consume s ((s ':= _) ': ps) = ps
+  Consume s (p ': ps) = p ': (Consume s ps)
   Consume _ '[] = '[]
 
 type Concat :: [a] -> [a] -> [a]
@@ -90,8 +59,8 @@ type family Index i as where
 
 data WiringDiagram is os where
   Node :: String -> Term s (PNode is os) -> WiringDiagram is os
-  Wye :: (os ~ ((Index o osa) ': osa))
-      => Proxy o -> WiringDiagram is osa -> WiringDiagram is os
-  Wire :: (is ~ (Concat isa (Consume i isb)), os ~ (Concat (Consume o osa) osb))
+  Wyre :: (is ~ (Concat isa (ConsumeIndex i isb)), os ~ (Concat osa osb))
+       => Proxy o -> Proxy i -> WiringDiagram isa osa -> WiringDiagram isb osb -> WiringDiagram is os
+  Wire :: (is ~ (Concat isa (ConsumeIndex i isb)), os ~ (Concat (Consume o osa) osb))
        => Proxy o -> Proxy i -> WiringDiagram isa osa -> WiringDiagram isb osb -> WiringDiagram is os
 
