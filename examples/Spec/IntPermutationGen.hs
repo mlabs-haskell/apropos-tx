@@ -7,7 +7,7 @@ module Spec.IntPermutationGen (
 ) where
 
 import Apropos
-import Apropos.Script.Model
+import Apropos.Script
 import Plutarch (compile)
 import Plutarch.Prelude
 import Test.Tasty (TestTree, testGroup)
