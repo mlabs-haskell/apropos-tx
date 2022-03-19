@@ -66,28 +66,3 @@ library
                  , Apropos.Tx
   hs-source-dirs:  src
 
-test-suite examples
-  import: lang
-  type: exitcode-stdio-1.0
-  main-is: Main.hs
-  hs-source-dirs: examples
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
-  other-modules:
-    Spec.Int
-    Spec.IntPermutationGen
-    Spec.IntPair
-    Spec.Plutarch.MagicNumber
-    Spec.Plutarch.CostModel
-  build-depends:
-    base,
-    apropos,
-    apropos-tx,
-    plutarch,
-    tasty,
-    tasty-hedgehog,
-    hedgehog,
-    plutus-ledger-api,
-    plutus-core,
-    text,
-    containers,
-    mtl,
