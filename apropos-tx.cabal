@@ -64,6 +64,9 @@ library
   import:          lang
   exposed-modules: Apropos.Script
                  , Apropos.Tx
+                 , Apropos.Gen.Contexts 
+                 , Apropos.Gen.Value 
+                 , Apropos.Gen.Credential
   hs-source-dirs:  src
 
 test-suite examples
