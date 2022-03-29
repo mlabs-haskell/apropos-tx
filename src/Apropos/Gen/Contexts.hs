@@ -2,15 +2,37 @@
 
 module Apropos.Gen.Contexts (scriptContext) where
 
-import Apropos.Gen (Gen, choice)
+import Apropos.Gen (Gen, choice, linear, list)
+import Apropos.Gen.Address (address)
+import Apropos.Gen.Credential (stakingCredential)
+import Apropos.Gen.Crypto (pubKeyHash)
+import Apropos.Gen.DCert (dCert)
+import Apropos.Gen.Extra (integer, pair)
+import Apropos.Gen.Extra qualified as Gen (maybe)
+import Apropos.Gen.Scripts (datum, datumHash)
+import Apropos.Gen.Time (posixTimeRange)
+import Apropos.Gen.TxId (txId)
+import Apropos.Gen.Value (currencySymbol, value)
 import Plutus.V1.Ledger.Contexts (
   ScriptContext (ScriptContext),
-  ScriptPurpose (Minting, Rewarding, Spending, Certifying),
-  TxInfo,
-  TxOutRef,
+  ScriptPurpose (Certifying, Minting, Rewarding, Spending),
+  TxInInfo (TxInInfo),
+  TxInfo (
+    TxInfo,
+    txInfoDCert,
+    txInfoData,
+    txInfoFee,
+    txInfoId,
+    txInfoInputs,
+    txInfoMint,
+    txInfoOutputs,
+    txInfoSignatories,
+    txInfoValidRange,
+    txInfoWdrl
+  ),
+  TxOut (TxOut),
+  TxOutRef (TxOutRef),
  )
-import Plutus.V1.Ledger.Value (CurrencySymbol)
-import Plutus.V1.Ledger.Credential (StakingCredential)
 
 scriptContext :: Gen ScriptContext
 scriptContext = do
@@ -19,14 +41,53 @@ scriptContext = do
   return $ ScriptContext i p
 
 txInfo :: Gen TxInfo
-txInfo = undefined
+txInfo = do
+  ins <- list (linear 1 5) txInInfo
+  outs <- list (linear 1 5) txOut
+  fee <- value
+  mint <- value
+  dCert' <- list (linear 1 10) dCert
+  wdrl <-
+    list (linear 0 10) $
+      pair stakingCredential $
+        integer (linear 0 50)
+  range <- posixTimeRange
+  sigs <- list (linear 0 10) pubKeyHash
+  data' <- list (linear 1 5) $ pair datumHash datum
+  id' <- txId
+  return $
+    TxInfo
+      { txInfoInputs = ins
+      , txInfoOutputs = outs
+      , txInfoFee = fee
+      , txInfoMint = mint
+      , txInfoDCert = dCert'
+      , txInfoWdrl = wdrl
+      , txInfoValidRange = range
+      , txInfoSignatories = sigs
+      , txInfoData = data'
+      , txInfoId = id'
+      }
+
+txInInfo :: Gen TxInInfo
+txInInfo = do
+  oRef <- txOutRef
+  o <- txOut
+  return $ TxInInfo oRef o
+
+txOut :: Gen TxOut
+txOut = do
+  a <- address
+  v <- value
+  h <- Gen.maybe datumHash
+  return $ TxOut a v h
 
 scriptPurpose :: Gen ScriptPurpose
 scriptPurpose = do
   c <- currencySymbol
   t <- txOutRef
-  s <- undefined
-  d <- undefined
+  s <- stakingCredential
+  d <- dCert
   choice
     [ return $ Minting c
     , return $ Spending t
@@ -34,12 +95,8 @@ scriptPurpose = do
     , return $ Certifying d
     ]
 
-currencySymbol :: Gen CurrencySymbol
-currencySymbol = undefined
-
 txOutRef :: Gen TxOutRef
-txOutRef = undefined
-
-stakingCredential :: Gen StakingCredential
-stakingCredential = undefined
-
+txOutRef = do
+  id' <- txId
+  idx <- choice $ return <$> [0 .. toInteger (maxBound :: Int)]
+  return $ TxOutRef id' idx

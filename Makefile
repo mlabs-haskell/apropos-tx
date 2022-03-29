@@ -34,7 +34,8 @@ usage:
 	@echo "  update_plutus       -- Update plutus version with niv"
 
 hoogle: requires_nix_shell
-	hoogle server --local
+	pkill hoogle || true
+	hoogle server --local > /dev/null &
 
 STACK_EXE_PATH = $(shell stack $(STACK_FLAGS) path --local-install-root)/bin
 
