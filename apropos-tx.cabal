@@ -65,6 +65,7 @@ library
   import:          lang
   exposed-modules:
     Apropos.Gen.Address
+    Apropos.Gen.Api
     Apropos.Gen.Contexts
     Apropos.Gen.Credential
     Apropos.Gen.Crypto

@@ -2,7 +2,7 @@
 
 module Apropos.Gen.Contexts (scriptContext) where
 
-import Apropos.Gen (Gen, choice, linear, list)
+import Apropos.Gen (Gen, element, linear, list)
 import Apropos.Gen.Address (address)
 import Apropos.Gen.Credential (stakingCredential)
 import Apropos.Gen.Crypto (pubKeyHash)
@@ -88,15 +88,15 @@ scriptPurpose = do
   t <- txOutRef
   s <- stakingCredential
   d <- dCert
-  choice
-    [ return $ Minting c
-    , return $ Spending t
-    , return $ Rewarding s
-    , return $ Certifying d
+  element
+    [ Minting c
+    , Spending t
+    , Rewarding s
+    , Certifying d
     ]
 
 txOutRef :: Gen TxOutRef
 txOutRef = do
   id' <- txId
-  idx <- choice $ return <$> [0 .. toInteger (maxBound :: Int)]
+  idx <- integer (linear 0 maxBound)
   return $ TxOutRef id' idx
