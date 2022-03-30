@@ -49,11 +49,13 @@ common lang
     , plutarch
     , plutus-core
     , plutus-ledger-api
+    , plutus-tx
     , pretty
     , pretty-show
     , safe
     , template-haskell
     , text
+    , bytestring
     , transformers
 
   ghc-options:

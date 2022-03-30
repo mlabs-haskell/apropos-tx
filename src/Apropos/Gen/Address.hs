@@ -1,6 +1,6 @@
 module Apropos.Gen.Address (address) where
 
-import Apropos.Gen (Gen, element)
+import Apropos.Gen (Gen)
 import Apropos.Gen.Credential (credential, stakingCredential)
 import Apropos.Gen.Extra qualified as Gen (maybe)
 import Plutus.V1.Ledger.Address (
