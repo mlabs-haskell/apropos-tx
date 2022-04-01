@@ -65,8 +65,8 @@
           sha256map = {
             "https://github.com/Plutonomicon/plutarch"."f8b7eb06184112ae2bebdec5a8156010141a05d5"
               = "sha256-y9lalsaTFVEPCoE/P8d4bduJJLSBvVpo/791mI9kcO4=";
-            "https://github.com/jhodgdev/apropos"."c6c580aeab8b5c2a6512a49823dd17936e87b70a"
-              = "sha256-r76rHhZSZsazHxTBHbqK7zlMB9rjjGmGWOUbR0fuxn8=";
+            "https://github.com/mlabs-haskell/apropos"."3734bb3baa297ed990725a5ef14efcbb6a1c1c23"
+              = "sha256-C2gQrd5hFvQ+BsjAJs6V0iP9PRzd9dZMKtpk7kOjhwc=";
             "https://github.com/input-output-hk/plutus.git"."6d8d25d1e84b2a4278da1036aab23da4161b8df8"
               = "o8m86TkI1dTo74YbE9CPPNrBfSDSrf//DMq+v2+woEY=";
             "https://github.com/Quid2/flat.git"."ee59880f47ab835dbd73bea0847dab7869fc20d8"
