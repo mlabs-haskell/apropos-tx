@@ -3,4 +3,4 @@ cradle:
     - path: "./src"
       component: "lib:apropos-tx"
     - path : "./examples"
-      component: "test-suite:examples"
+      component: "test:examples"
