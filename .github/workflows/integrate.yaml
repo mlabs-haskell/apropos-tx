@@ -44,8 +44,8 @@ jobs:
         name: Install hlint
       - run: hlint $(git ls-tree -r HEAD --full-tree --name-only | grep -E '.*\.hs')
         name: Lint
-      - run: ./.github/format.sh
-        name: Format
+      # - run: ./.github/format.sh
+      #   name: Format
       - name: Build the full ci derivation
         run: nix build .#check.x86_64-linux
           
