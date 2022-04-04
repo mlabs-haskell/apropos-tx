@@ -5,7 +5,7 @@ module Apropos.Gen.Scripts (
 ) where
 
 import Apropos.Gen (Gen)
-import Apropos.Gen.Api (builtinData, builtinByteString)
+import Apropos.Gen.Api (builtinByteString, builtinData)
 import Plutus.V1.Ledger.Scripts (
   Datum (Datum),
   DatumHash (DatumHash),

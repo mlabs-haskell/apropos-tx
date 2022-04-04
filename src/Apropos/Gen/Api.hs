@@ -22,5 +22,5 @@ builtinData = do
   return $ BuiltinData d
 
 data' :: Gen Data
-data' = do 
+data' = do
   undefined
