@@ -1,7 +1,6 @@
 module Main (main) where
 
 import Spec.Int
-import Spec.IntPair
 import Spec.IntPermutationGen
 import Spec.Plutarch.CostModel
 import Spec.Plutarch.MagicNumber
@@ -26,13 +25,6 @@ tests =
         , intPermutationGenPureTests
         , intPermutationGenPlutarchTests
         , intPermutationGenSelfTests
-        ]
-    , testGroup
-        "IntPair composite model"
-        [ intPairGenSelfTests
-        , intPairGenSelfTests
-        , intPairGenPureTests
-        , intPairGenPlutarchTests
         ]
     , testGroup
         "Script As Object"

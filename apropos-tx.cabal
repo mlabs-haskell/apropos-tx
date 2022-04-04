@@ -37,57 +37,57 @@ common lang
     TypeSynonymInstances
     UndecidableInstances
 
-  build-depends:      base ^>=4.14
-                    , apropos
-                    , containers
-                    , hedgehog
-                    , free
-                    , lens
-                    , minisat-solver
-                    , mtl
-                    , plutarch
-                    , plutus-core
-                    , plutus-ledger-api
-                    , pretty
-                    , pretty-show
-                    , safe
-                    , template-haskell
-                    , text
-                    , transformers
+  build-depends:
+    , apropos
+    , base               >=4.14
+    , containers
+    , free
+    , hedgehog
+    , lens
+    , minisat-solver
+    , mtl
+    , plutarch
+    , plutus-core
+    , plutus-ledger-api
+    , pretty
+    , pretty-show
+    , safe
+    , template-haskell
+    , text
+    , transformers
+
   ghc-options:
     -Wall -Wcompat -Wincomplete-uni-patterns -Wredundant-constraints
     -Wmissing-export-lists -Werror -Wincomplete-record-updates
-    -Wmissing-deriving-strategies
-    -ddump-splices
+    -Wmissing-deriving-strategies -ddump-splices
 
 library
   import:          lang
-  exposed-modules: Apropos.Script
-                 , Apropos.Tx
+  exposed-modules:
+    Apropos.Script
+    Apropos.Tx
+
   hs-source-dirs:  src
 
 test-suite examples
-  import: lang
-  type: exitcode-stdio-1.0
-  main-is: Main.hs
+  import:         lang
+  type:           exitcode-stdio-1.0
+  main-is:        Main.hs
   hs-source-dirs: examples
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:    -threaded -rtsopts -with-rtsopts=-N
   other-modules:
     Spec.Int
     Spec.IntPermutationGen
-    Spec.IntPair
-    Spec.Plutarch.MagicNumber
     Spec.Plutarch.CostModel
+    Spec.Plutarch.MagicNumber
+
   build-depends:
-    base,
-    apropos,
-    apropos-tx,
-    plutarch,
-    tasty,
-    tasty-hedgehog,
-    hedgehog,
-    plutus-ledger-api,
-    plutus-core,
-    text,
-    containers,
-    mtl,
+    , apropos
+    , apropos-tx
+    , base
+    , containers
+    , hedgehog
+    , mtl
+    , tasty
+    , tasty-hedgehog
+    , text
