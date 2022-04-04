@@ -39,7 +39,7 @@ common lang
 
   build-depends:
     , apropos
-    , base               ^>=4.14
+    , base               >=4.14
     , containers
     , free
     , hedgehog

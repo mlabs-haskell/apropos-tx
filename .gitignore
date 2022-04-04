@@ -47,6 +47,10 @@ Thumbs.db
 # Local configuration files
 cabal.project.local*
 
-# envrc 
+# direnv 
 .envrc 
-.direnv/
+.direnv
+
+# ctags 
+tags 
+TAGS

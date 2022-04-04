@@ -12,7 +12,6 @@ import Plutus.V1.Ledger.Value (
   TokenName (TokenName),
   Value (Value),
  )
-import PlutusTx.AssocMap (Map)
 
 value :: Gen Value
 value = do
