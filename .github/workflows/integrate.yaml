@@ -38,9 +38,9 @@ jobs:
         with:
           path: /nix/store
           key: ${{ runner.os }}-nix-store
-      - run: nix-env -iA nixpkgs.haskellPackages.fourmolu
+      - run: nix-env -iA haskellPackages.fourmolu
         name: Install fourmolu
-      - run: nix-env -iA nixpkgs.hlint
+      - run: nix-env -iA hlint
         name: Install hlint
       - run: hlint $(git ls-tree -r HEAD --full-tree --name-only | grep -E '.*\.hs')
         name: Lint
