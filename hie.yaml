@@ -1,6 +1,2 @@
 cradle:
   cabal:
-    - component: lib:apropos-tx
-      path: ./src
-    - component: test:examples
-      path: ./examples
