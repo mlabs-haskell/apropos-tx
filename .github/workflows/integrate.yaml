@@ -35,7 +35,7 @@ jobs:
           authToken: ${{ secrets.CACHIX_KEY }}
       - run: nix-env -iA haskellPackages.fourmolu -f '<nixpkgs>'
         name: Install fourmolu
-      - run: nix-env -i hlint -f '<nixpkgs>'
+      - run: nix-env -iA hlint -f '<nixpkgs>'
         name: Install hlint
       - run: hlint $(git ls-tree -r HEAD --full-tree --name-only | grep -E '.*\.hs')
         name: Lint
