@@ -38,14 +38,14 @@ jobs:
         with:
           path: /nix/store
           key: ${{ runner.os }}-nix-store
-      # - run: nix-env -i haskellPackages.fourmolu -f '<nixpkgs>'
-      #   name: Install fourmolu
+      - run: nix-env -iA haskellPackages.fourmolu -f '<nixpkgs>'
+        name: Install fourmolu
       - run: nix-env -i hlint -f '<nixpkgs>'
         name: Install hlint
       - run: hlint $(git ls-tree -r HEAD --full-tree --name-only | grep -E '.*\.hs')
         name: Lint
-      # - run: ./.github/format.sh
-      #   name: Format
+      - run: ./.github/format.sh
+        name: Format
       - name: Build the full ci derivation
         run: nix build .#check.x86_64-linux
           
