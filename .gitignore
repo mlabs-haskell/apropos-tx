@@ -8,11 +8,7 @@ dist-newstyle/
 result
 result-*
 
-# direnv
-#.envrc
-
 .swp
-
 
 #vscode
 .vscode/
