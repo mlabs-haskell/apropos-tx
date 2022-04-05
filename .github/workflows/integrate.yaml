@@ -33,11 +33,6 @@ jobs:
         with:
           name: mlabs
           authToken: ${{ secrets.CACHIX_KEY }}
-      - uses: actions/cache@v3.0.1
-        name: Cache Nix store
-        with:
-          path: /nix/store
-          key: ${{ runner.os }}-nix-store
       - run: nix-env -iA haskellPackages.fourmolu -f '<nixpkgs>'
         name: Install fourmolu
       - run: nix-env -i hlint -f '<nixpkgs>'
