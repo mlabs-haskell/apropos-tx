@@ -62,7 +62,7 @@ addCostPropGenTests =
           ]
 
 instance ScriptModel CostModelProp Integer where
-  script _ i = addCost i
+  script _ = addCost
   expect _ = Yes :: Formula CostModelProp
 
   -- This is the cool bit. We can model the cost exactly. Neato.
