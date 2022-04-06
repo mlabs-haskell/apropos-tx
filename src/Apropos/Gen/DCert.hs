@@ -1,3 +1,10 @@
+{- |
+Module: Apropos.Gen.DCert
+Description: Plutus dcert generators.
+Maintainer: jack@mlabs.city
+
+`Gen`s for `Plutus.V1.Ledger.DCert` types.
+-}
 module Apropos.Gen.DCert (dCert) where
 
 import Apropos.Gen (Gen, element, linear)
@@ -16,6 +23,7 @@ import Plutus.V1.Ledger.DCert (
   ),
  )
 
+-- | `Gen` for Plutus `DCert`s.
 dCert :: Gen DCert
 dCert = do
   sc <- stakingCredential

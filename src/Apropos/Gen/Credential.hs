@@ -1,3 +1,10 @@
+{- |
+Module: Apropos.Gen.Credential
+Description: Plutus credential generators.
+Maintainer: jack@mlabs.city
+
+`Gen`s for `Plutus.V1.Ledger.Address` types.
+-}
 module Apropos.Gen.Credential (credential, stakingCredential) where
 
 import Apropos.Gen (Gen, element, linear)
@@ -9,12 +16,14 @@ import Plutus.V1.Ledger.Credential (
   StakingCredential (StakingHash, StakingPtr),
  )
 
+-- | `Gen` for Plutus `Credential`s.
 credential :: Gen Credential
 credential = do
   pkh <- pubKeyHash
   vh <- validatorHash
   element [PubKeyCredential pkh, ScriptCredential vh]
 
+-- | `Gen` for Plutus `StakingCredential`s.
 stakingCredential :: Gen StakingCredential
 stakingCredential = do
   cred <- credential

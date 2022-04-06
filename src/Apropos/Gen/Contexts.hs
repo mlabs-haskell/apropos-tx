@@ -1,5 +1,10 @@
-{-# OPTIONS_GHC -Wwarn #-}
+{- |
+Module: Apropos.Gen.Context
+Description: Plutus context generators.
+Maintainer: jack@mlabs.city
 
+`Gen`s for `Plutus.V1.Ledger.Context` types.
+-}
 module Apropos.Gen.Contexts (scriptContext) where
 
 import Apropos.Gen (Gen, element, linear, list)
@@ -34,12 +39,14 @@ import Plutus.V1.Ledger.Contexts (
   TxOutRef (TxOutRef),
  )
 
+-- | `Gen` for Plutus `ScriptContext`s.
 scriptContext :: Gen ScriptContext
 scriptContext = do
   i <- txInfo
   p <- scriptPurpose
   return $ ScriptContext i p
 
+-- | `Gen` for Plutus `TxInfo`s.
 txInfo :: Gen TxInfo
 txInfo = do
   ins <- list (linear 1 5) txInInfo
@@ -69,12 +76,14 @@ txInfo = do
       , txInfoId = id'
       }
 
+-- | `Gen` for Plutus `TxInInfo`s.
 txInInfo :: Gen TxInInfo
 txInInfo = do
   oRef <- txOutRef
   o <- txOut
   return $ TxInInfo oRef o
 
+-- | `Gen` for Plutus `TxOut`s.
 txOut :: Gen TxOut
 txOut = do
   a <- address
@@ -82,6 +91,7 @@ txOut = do
   h <- Gen.maybe datumHash
   return $ TxOut a v h
 
+-- | `Gen` for Plutus `ScriptPurpose`s.
 scriptPurpose :: Gen ScriptPurpose
 scriptPurpose = do
   c <- currencySymbol
@@ -95,6 +105,7 @@ scriptPurpose = do
     , Certifying d
     ]
 
+-- | `Gen` for Plutus `TxOutRef`s.
 txOutRef :: Gen TxOutRef
 txOutRef = do
   id' <- txId

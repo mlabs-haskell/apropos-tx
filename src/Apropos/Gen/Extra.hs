@@ -1,5 +1,10 @@
-{-# OPTIONS_GHC -Wwarn #-}
+{- |
+Module: Apropos.Gen.Extra
+Description: Generator helper functions.
+Maintainer: jack@mlabs.city
 
+Helper functions for `Apropos.Gen`.
+-}
 module Apropos.Gen.Extra (
   sha256,
   map,
@@ -16,16 +21,37 @@ import Data.Text.Encoding (encodeUtf8)
 import PlutusTx.AssocMap (Map, fromList)
 import Prelude hiding (map, maybe)
 
-pair :: Gen a -> Gen b -> Gen (a, b)
+-- | Creates a generator for a 2-tuple.
+pair ::
+  -- | Generator for the type of the first element.
+  Gen a ->
+  -- | Generator for the type of the second element.
+  Gen b ->
+  -- | Generator for a pair of a value of the first type and a
+  --   value of the second type.
+  Gen (a, b)
 pair genA genB = do
   a <- genA
   b <- genB
   return (a, b)
 
-integer :: Range -> Gen Integer
+-- | Function producing a generator for an `Integer`.
+integer ::
+  -- | Provides min and max bound for the integer to be
+  --   generated.
+  Range ->
+  -- | The `Integer` generator.
+  Gen Integer
 integer r = toInteger <$> int r
 
-maybe :: Show a => Gen a -> Gen (Maybe a)
+-- | Function producing a generator for a `Maybe` type.
+maybe ::
+  Show a =>
+  -- | A generator for the type to be wrapped by the `Maybe`
+  --   monad.
+  Gen a ->
+  -- | A generator for the desired `Maybe` type.
+  Gen (Maybe a)
 maybe genA = do
   x <- genA
   element [Just x, Nothing]
@@ -48,31 +74,48 @@ map r genK genV = do
   let mapList = zip ks vs
   return $ fromList mapList
 
+-- | Generator for an upper case alphabetic character.
 upperChar :: Gen Char
 upperChar = element ['A' .. 'Z']
 
+-- | Generator for a lower case alphaberic character.
 lowerChar :: Gen Char
 lowerChar = element ['a' .. 'z']
 
+-- | Generator for a numeric character.
 numChar :: Gen Char
 numChar = element ['0' .. '9']
 
+-- | Generator for a hexademical character.
 hexChar :: Gen Char
 hexChar = element $ ['0' .. '9'] ++ ['a' .. 'f']
 
-alphaString :: Range -> Gen String
+-- | Returns a generator for a mixed case alphabetic string.
+alphaString ::
+  -- | `Range` for the length of the string.
+  Range ->
+  Gen String
 alphaString r = list r gen
   where
     gen = choice [upperChar, lowerChar]
 
-alphaNumericString :: Range -> Gen String
-alphaNumericString r = list r gen
+-- | Returns a generator for a mixed case alphanumeric string.
+alphanumericString ::
+  -- | `Range` for the length of the string.
+  Range ->
+  Gen String
+alphanumericString r = list r gen
   where
     gen = choice [upperChar, lowerChar, numChar]
 
-numericString :: Range -> Gen String
+-- | Returns a generator for a numeric string.
+numericString ::
+  -- | `Range` for the length of the string.
+  Range ->
+  Gen String
 numericString r = list r numChar
 
+-- | Return a generator for a hexadecimal string.
 hexString :: Range -> Gen String
 hexString r = list r hexChar
 
@@ -82,8 +125,8 @@ genText f r = pack <$> f r
 alphaText :: Range -> Gen Text
 alphaText = genText alphaString
 
-alphaNumericText :: Range -> Gen Text
-alphaNumericText = genText alphaNumericString
+alphanumericText :: Range -> Gen Text
+alphanumericText = genText alphanumericString
 
 numericText :: Range -> Gen Text
 numericText = genText alphaString
@@ -97,8 +140,8 @@ genBS f r = encodeUtf8 <$> f r
 alphaBS :: Range -> Gen ByteString
 alphaBS = genBS alphaText
 
-alphaNumericBS :: Range -> Gen ByteString
-alphaNumericBS = genBS alphaNumericText
+alphanumericBS :: Range -> Gen ByteString
+alphanumericBS = genBS alphanumericText
 
 numericBS :: Range -> Gen ByteString
 numericBS = genBS numericText
