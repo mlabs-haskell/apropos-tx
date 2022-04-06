@@ -57,7 +57,7 @@
 
             # We use the ones from Nixpkgs, since they are cached reliably.
             # Eventually we will probably want to build these with haskell.nix.
-            nativeBuildInputs = [ pkgs.cabal-install pkgs.hlint (fourmoluFor system) ];
+            nativeBuildInputs = with pkgs; [ cabal-install hlint (fourmoluFor system) fd haskellPackages.cabal-fmt nixpkgs-fmt coreutils ];
 
             additional = ps: [
               ps.plutarch
@@ -81,19 +81,8 @@
         in
         pkgs.runCommand "format-check"
           {
-            nativeBuildInputs = [
-              pkgs.coreutils
-              pkgs.git
-              pkgs.fd
-              pkgs.haskellPackages.cabal-fmt
-              pkgs.nixpkgs-fmt
-              (fourmoluFor system)
-              pkgs.hlint
-            ];
+            nativeBuildInputs = [ self.devShell.${system}.nativeBuildInputs ];
           } ''
-          export LC_CTYPE=C.UTF-8
-          export LC_ALL=C.UTF-8
-          export LANG=C.UTF-8
           cd ${self}
           IN_NIX_SHELL=true make format_check cabalfmt_check nixpkgsfmt_check lint
           mkdir $out
