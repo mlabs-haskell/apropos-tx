@@ -3,7 +3,7 @@ Module: Apropos.Gen.Credential
 Description: Plutus credential generators.
 Maintainer: jack@mlabs.city
 
-`Gen`s for `Plutus.V1.Ledger.Address` types.
+`Gen`s for `Plutus.V1.Ledger.Credential` types.
 -}
 module Apropos.Gen.Credential (credential, stakingCredential) where
 

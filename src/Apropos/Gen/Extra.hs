@@ -11,6 +11,16 @@ module Apropos.Gen.Extra (
   pair,
   integer,
   maybe,
+  upperChar,
+  lowerChar,
+  numChar,
+  numericString,
+  alphaText,
+  alphanumericText,
+  numericText,
+  alphaBS,
+  alphanumericBS,
+  numericBS,
 ) where
 
 import Apropos.Gen (Gen, choice, element, int, list)
