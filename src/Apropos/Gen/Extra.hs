@@ -126,38 +126,86 @@ numericString ::
 numericString r = list r numChar
 
 -- | Return a generator for a hexadecimal string.
-hexString :: Range -> Gen String
+hexString ::
+  -- | `Range` for the length of the string.
+  Range ->
+  Gen String
 hexString r = list r hexChar
 
-genText :: (Range -> Gen String) -> (Range -> Gen Text)
+{- | Auxiliary function for creating text generation functions
+     from string generation functions.
+-}
+genText ::
+  -- | Existing string generation function e.g. `alphaString`.
+  (Range -> Gen String) ->
+  -- | Function taking a `Range` and producing a `Text` generator.
+  (Range -> Gen Text)
 genText f r = pack <$> f r
 
-alphaText :: Range -> Gen Text
+-- | Return a generator for an alphabetic `Text` string.
+alphaText ::
+  -- | Length of desired string.
+  Range ->
+  Gen Text
 alphaText = genText alphaString
 
-alphanumericText :: Range -> Gen Text
+-- | Return a generator for an alphanumeric `Text` string.
+alphanumericText ::
+  -- | Length of desired string.
+  Range ->
+  Gen Text
 alphanumericText = genText alphanumericString
 
-numericText :: Range -> Gen Text
+-- | Return a generator for a numeric `Text` string.
+numericText ::
+  -- | Length of desired string.
+  Range ->
+  Gen Text
 numericText = genText alphaString
 
-hexText :: Range -> Gen Text
+-- | Return a generator for a hexadecimal `Text` string.
+hexText ::
+  -- | Length of desired string.
+  Range ->
+  Gen Text
 hexText = genText hexString
 
-genBS :: (Range -> Gen Text) -> (Range -> Gen ByteString)
+-- | Auxiliary function for creating `ByteString` generators.
+genBS ::
+  -- | Preexisting `Text` generation function e.g. `alphaText`.
+  (Range -> Gen Text) ->
+  -- | Desired `ByteString` generation function.
+  (Range -> Gen ByteString)
 genBS f r = encodeUtf8 <$> f r
 
-alphaBS :: Range -> Gen ByteString
+-- | Return a generator for an alphabetic `ByteString`.
+alphaBS ::
+  -- | Length of desired string.
+  Range ->
+  Gen ByteString
 alphaBS = genBS alphaText
 
-alphanumericBS :: Range -> Gen ByteString
+-- | Return a generator for an alphanumeric `ByteString`.
+alphanumericBS ::
+  -- | Length of desired string.
+  Range ->
+  Gen ByteString
 alphanumericBS = genBS alphanumericText
 
-numericBS :: Range -> Gen ByteString
+-- | Return a generator for an numeric `ByteString`.
+numericBS ::
+  -- | Length of desired string.
+  Range ->
+  Gen ByteString
 numericBS = genBS numericText
 
-hexBS :: Range -> Gen ByteString
+-- | Return a generator for an hexadecimal `ByteString`.
+hexBS ::
+  -- | Length of desired string.
+  Range ->
+  Gen ByteString
 hexBS = genBS hexText
 
+-- | Return a generator for SHA256 hash.
 sha256 :: Gen ByteString
 sha256 = hexBS $ singleton 64
