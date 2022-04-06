@@ -2,8 +2,6 @@
 # are made availible by the nix shell defined in shell.nix.
 # In most cases you should execute Make after entering nix-shell.
 
-SHELL := /usr/bin/env bash
-
 .PHONY: hoogle build test watch ghci readme_contents \
 	format lint refactor requires_nix_shell
 
@@ -25,8 +23,8 @@ usage:
 	@echo "  format_check        -- Check source code formatting without making changes"
 	@echo "  cabalfmt            -- Apply cabal formatting with cabal-fmt"
 	@echo "  cabalfmt_check      -- Check cabal files for formatting errors without making changes"
-	@echo "  nixfmt              -- Apply nix formatting with nixfmt"
-	@echo "  nixfmt_check        -- Check nix files for format errors"
+	@echo "  nixpkgsfmt          -- Apply nix formatting with nixpkgs-fmt"
+	@echo "  nixpkgsfmt_check    -- Check nix files for format errors"
 	@echo "  lint                -- Check the sources with hlint"
 	@echo "  refactor_cautious   -- Automatically apply hlint refactors, with prompt"
 	@echo "  refactor            -- Automatically apply hlint refactors, without prompt"
@@ -71,7 +69,7 @@ format: requires_nix_shell
 format_check: requires_nix_shell
 	fourmolu --mode check --check-idempotence $(FORMAT_EXTENSIONS) $(FORMAT_SOURCES)
 
-CABAL_SOURCES := $(shell git ls-tree -r HEAD --full-tree --name-only | grep -E '.*\.cabal' )
+CABAL_SOURCES := $(shell fd -ecabal)
 
 cabalfmt: requires_nix_shell
 	cabal-fmt --inplace $(CABAL_SOURCES)
@@ -80,13 +78,13 @@ cabalfmt_check: requires_nix_shell
 	cabal-fmt --check $(CABAL_SOURCES)
 
 # Nix files to format
-NIX_SOURCES := $(shell git ls-tree -r HEAD --full-tree --name-only | grep -E '.*\.nix' )
+NIX_SOURCES := $(shell fd -enix)
 
-nixfmt: requires_nix_shell
-	nixfmt $(NIX_SOURCES)
+nixpkgsfmt: requires_nix_shell
+	nixpkgs-fmt $(NIX_SOURCES)
 
-nixfmt_check: requires_nix_shell
-	nixfmt --check $(NIX_SOURCES)
+nixpkgsfmt_check: requires_nix_shell
+	nixpkgs-fmt --check $(NIX_SOURCES)
 
 # Check with hlint, currently I couldn't get --refactor to work
 lint: requires_nix_shell
