@@ -30,10 +30,13 @@ usage:
 	@echo "  refactor            -- Automatically apply hlint refactors, without prompt"
 	@echo "  readme_contents     -- Add table of contents to README"
 	@echo "  update_plutus       -- Update plutus version with niv"
+	@echo "  haddock             -- Generate haddock docs.
 
 hoogle: requires_nix_shell
 	pkill hoogle || true
-	hoogle server --local > /dev/null &
+	hoogle generate --local=.haddock --database=.hoogle/local.hoo
+	hoogle server --local -p 8080 >> /dev/null &
+	hoogle server --local --database=.hoogle/local.hoo -p 8081 >> /dev/null &
 
 STACK_EXE_PATH = $(shell stack $(STACK_FLAGS) path --local-install-root)/bin
 
@@ -122,3 +125,6 @@ update_plutus:
 	@echo "Make sure to update the plutus rev in cabal.project with:"
 	@echo "    commit: $(PLUTUS_REV)"
 	@echo "This may require further resolution of dependency versions."
+
+haddock: requires_nix_shell
+	cabal haddock --haddock-html --haddock-hoogle --builddir=.haddock
