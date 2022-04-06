@@ -28,7 +28,7 @@ numMagicNumbers = 4
 
 -- accepts a range of numbers determined by a Magic Number
 magicNumber :: Integer -> Script
-magicNumber i = compile $ plam $ \ii -> pif ((pfromData ii #<= (fromInteger i :: Term s PInteger)) #&& ((fromInteger (- i) :: Term s PInteger) #<= pfromData ii)) (pcon PUnit) perror
+magicNumber i = compile $ plam $ \ii -> pif ((pfromData ii #<= (fromInteger i :: Term s PInteger)) #&& ((fromInteger (-i) :: Term s PInteger) #<= pfromData ii)) (pcon PUnit) perror
 
 data MagicNumberProp = HalfWidth Integer
   deriving stock (Eq, Ord, Show)

@@ -24,7 +24,7 @@ numCostModels = 10
 
 peano :: Integer -> Term s PInteger
 peano 0 = 0
-peano i = papp (plam (+ 1)) (peano (i -1))
+peano i = papp (plam (+ 1)) (peano (i - 1))
 
 addCost :: Integer -> Script
 addCost i = compile $ peano i
