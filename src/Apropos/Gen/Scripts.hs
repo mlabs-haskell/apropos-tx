@@ -1,3 +1,10 @@
+{- |
+Module: Apropos.Gen.Scripts
+Description: Script generators.
+Maintainer: jack@mlabs.city
+
+`Gen`s for `Plutus.V1.Ledger.Scripts` types.
+-}
 module Apropos.Gen.Scripts (
   validatorHash,
   datum,
@@ -12,16 +19,19 @@ import Plutus.V1.Ledger.Scripts (
   ValidatorHash (ValidatorHash),
  )
 
+-- | Generator for Plutus `Datum` type.
 datum :: Gen Datum
 datum = do
   bid <- builtinData
   return $ Datum bid
 
+-- | Generator for Plutus `DatumHash` type.
 datumHash :: Gen DatumHash
 datumHash = do
   bs <- builtinByteString
   return $ DatumHash bs
 
+-- | Generator for Plutus `validatorHash` type.
 validatorHash :: Gen ValidatorHash
 validatorHash = do
   bs <- builtinByteString
