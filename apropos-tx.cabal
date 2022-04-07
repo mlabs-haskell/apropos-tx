@@ -40,6 +40,7 @@ common lang
   build-depends:
     , apropos
     , base               >=4.14
+    , bytestring
     , containers
     , free
     , hedgehog
@@ -49,6 +50,7 @@ common lang
     , plutarch
     , plutus-core
     , plutus-ledger-api
+    , plutus-tx
     , pretty
     , pretty-show
     , safe
@@ -64,6 +66,18 @@ common lang
 library
   import:          lang
   exposed-modules:
+    Apropos.Gen.Address
+    Apropos.Gen.Api
+    Apropos.Gen.Contexts
+    Apropos.Gen.Credential
+    Apropos.Gen.Crypto
+    Apropos.Gen.DCert
+    Apropos.Gen.Extra
+    Apropos.Gen.Interval
+    Apropos.Gen.Scripts
+    Apropos.Gen.Time
+    Apropos.Gen.TxId
+    Apropos.Gen.Value
     Apropos.Script
     Apropos.Tx
 
@@ -88,6 +102,9 @@ test-suite examples
     , containers
     , hedgehog
     , mtl
+    , plutarch
+    , plutus-core
+    , plutus-ledger-api
     , tasty
     , tasty-hedgehog
     , text
