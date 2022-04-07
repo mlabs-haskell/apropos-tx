@@ -58,7 +58,7 @@ txInfo = do
     list (linear 0 10) $
       pair stakingCredential $
         integer (linear 0 50)
-  range <- posixTimeRange
+  range <- posixTimeRange (linear 0 2000) (linear 6000 maxBound)
   sigs <- list (linear 0 10) pubKeyHash
   data' <- list (linear 1 5) $ pair datumHash datum
   id' <- txId
