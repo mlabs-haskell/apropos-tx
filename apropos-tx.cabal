@@ -40,6 +40,7 @@ common lang
   build-depends:
     , apropos
     , base               >=4.14
+    , bytestring
     , containers
     , free
     , hedgehog
@@ -55,7 +56,6 @@ common lang
     , safe
     , template-haskell
     , text
-    , bytestring
     , transformers
 
   ghc-options:
@@ -73,6 +73,7 @@ library
     Apropos.Gen.Crypto
     Apropos.Gen.DCert
     Apropos.Gen.Extra
+    Apropos.Gen.Interval
     Apropos.Gen.Scripts
     Apropos.Gen.Time
     Apropos.Gen.TxId
