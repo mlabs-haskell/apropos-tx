@@ -1,6 +1,6 @@
 {- |
 Module: Apropos.Gen.TxId
-Description: Plutus credential generators.
+Description: Plutus `TxId` generators.
 Maintainer: jack@mlabs.city
 
 `Gen`s for `Plutus.V1.Ledger.TxId` types.

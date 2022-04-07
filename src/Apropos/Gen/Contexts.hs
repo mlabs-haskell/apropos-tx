@@ -5,7 +5,14 @@ Maintainer: jack@mlabs.city
 
 `Gen`s for `Plutus.V1.Ledger.Context` types.
 -}
-module Apropos.Gen.Contexts (scriptContext) where
+module Apropos.Gen.Contexts (
+  scriptContext,
+  txInfo,
+  txInInfo,
+  txOut,
+  scriptPurpose,
+  txOutRef,
+) where
 
 import Apropos.Gen (Gen, element, linear, list)
 import Apropos.Gen.Address (address)

@@ -22,9 +22,12 @@ import Plutus.V1.Ledger.Interval (
 -}
 interval ::
   Show a =>
-  Gen a -> -- Generator for the lower bound.
-  Gen a -> -- Generator for the upper bound.
-  Gen (Interval a) -- Generator for the interval.
+  -- | Generator for the lower bound.
+  Gen a ->
+  -- | Generator for the upper bound.
+  Gen a ->
+  -- | Generator for the interval.
+  Gen (Interval a)
 interval g0 g1 = do
   l <- lowerBound g0
   u <- upperBound g1

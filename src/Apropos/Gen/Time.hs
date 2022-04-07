@@ -5,7 +5,7 @@ Maintainer: jack@mlabs.city
 
 `Gen`s for `Plutus.V1.Ledger.Time` types.
 -}
-module Apropos.Gen.Time (posixTimeRange) where
+module Apropos.Gen.Time (posixTimeRange, posixTime) where
 
 import Apropos.Gen (Gen)
 import Apropos.Gen.Extra (integer)
