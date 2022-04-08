@@ -50,3 +50,7 @@ cabal.project.local*
 # ctags 
 tags 
 TAGS
+
+# Haddock artefacts 
+.haddock/
+.hoogle/
