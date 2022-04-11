@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wwarn #-}
+
 {- |
 Module: Apropos.Gen.Api
 Description: Misc. Plutus generators.
@@ -7,7 +9,7 @@ Maintainer: jack@mlabs.city
 -}
 module Apropos.Gen.Api (
   builtinByteString,
-  builtinData,
+  -- builtinData,
 ) where
 
 import Apropos.Gen (Gen, element, int, linear, list, singleton)
@@ -30,7 +32,7 @@ builtinData = do
   d <- data'
   return $ BuiltinData d
 
--- | `Gen` for Plutus `Data`.
+-- | TODO: Re-do; too slow. `Gen` for Plutus `Data`.
 data' :: Gen Data
 data' = do
   let mapGen :: Gen [(Data, Data)]

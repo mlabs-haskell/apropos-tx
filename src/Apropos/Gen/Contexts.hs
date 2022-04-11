@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wwarn #-}
+
 {- |
 Module: Apropos.Gen.Context
 Description: Plutus context generators.
@@ -21,7 +23,9 @@ import Apropos.Gen.Crypto (pubKeyHash)
 import Apropos.Gen.DCert (dCert)
 import Apropos.Gen.Extra (integer, pair)
 import Apropos.Gen.Extra qualified as Gen (maybe)
-import Apropos.Gen.Scripts (datum, datumHash)
+
+-- import Apropos.Gen.Scripts (datum, datumHash)
+import Apropos.Gen.Scripts (datumHash)
 import Apropos.Gen.Time (posixTimeRange)
 import Apropos.Gen.TxId (txId)
 import Apropos.Gen.Value (currencySymbol, value)
@@ -67,7 +71,7 @@ txInfo = do
         integer (linear 0 50)
   range <- posixTimeRange (linear 0 2000) (linear 6000 maxBound)
   sigs <- list (linear 0 10) pubKeyHash
-  data' <- list (linear 1 5) $ pair datumHash datum
+  -- data' <- list (linear 1 5) $ pair datumHash datum
   id' <- txId
   return $
     TxInfo
@@ -79,7 +83,8 @@ txInfo = do
       , txInfoWdrl = wdrl
       , txInfoValidRange = range
       , txInfoSignatories = sigs
-      , txInfoData = data'
+      , -- , txInfoData = data'
+        txInfoData = []
       , txInfoId = id'
       }
 

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wwarn #-}
+
 {- |
 Module: Apropos.Gen.Scripts
 Description: Script generators.
@@ -7,23 +9,25 @@ Maintainer: jack@mlabs.city
 -}
 module Apropos.Gen.Scripts (
   validatorHash,
-  datum,
+  -- datum,
   datumHash,
 ) where
 
 import Apropos.Gen (Gen)
-import Apropos.Gen.Api (builtinByteString, builtinData)
+
+-- import Apropos.Gen.Api (builtinByteString, builtinData)
+import Apropos.Gen.Api (builtinByteString)
 import Plutus.V1.Ledger.Scripts (
   Datum (Datum),
   DatumHash (DatumHash),
   ValidatorHash (ValidatorHash),
  )
 
--- | Generator for Plutus `Datum` type.
-datum :: Gen Datum
-datum = do
-  bid <- builtinData
-  return $ Datum bid
+-- -- | Generator for Plutus `Datum` type.
+-- datum :: Gen Datum
+-- datum = do
+--   bid <- builtinData
+--   return $ Datum bid
 
 -- | Generator for Plutus `DatumHash` type.
 datumHash :: Gen DatumHash
