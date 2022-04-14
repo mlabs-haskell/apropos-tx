@@ -10,6 +10,7 @@ common lang
     BinaryLiterals
     ConstraintKinds
     DataKinds
+    DeriveAnyClass
     DeriveFunctor
     DeriveGeneric
     DeriveTraversable
@@ -42,6 +43,7 @@ common lang
     , base               >=4.14
     , containers
     , free
+    , hashable
     , hedgehog
     , lens
     , minisat-solver

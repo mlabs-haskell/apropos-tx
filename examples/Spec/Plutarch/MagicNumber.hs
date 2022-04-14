@@ -50,7 +50,7 @@ instance HasLogicalModel MagicNumberProp Script where
 instance HasParameterisedGenerator MagicNumberProp Script where
   parameterisedGenerator s =
     case Set.toList s of
-      [HalfWidth i] -> pure $ magicNumber i
+      [HalfWidth i] -> Source $ pure $ magicNumber i
       _ -> error "the impossible happened"
 
 magicNumberPropGenTests :: TestTree

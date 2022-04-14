@@ -2,10 +2,12 @@ module Apropos.Script (ScriptModel (..)) where
 
 import Apropos.Gen
 import Apropos.Gen.Enumerate
+import Apropos.Gen.BacktrackingTraversal(traversalAsGen)
 import Apropos.HasLogicalModel
 import Apropos.HasParameterisedGenerator
 import Apropos.LogicalModel
 import Apropos.Type
+import Control.Monad (void)
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.String (fromString)
@@ -15,6 +17,7 @@ import Hedgehog (
   Property,
   TestLimit,
   withTests,
+  property,
  )
 import Plutus.V1.Ledger.Api (ExCPU (..), ExMemory (..))
 import Plutus.V1.Ledger.Scripts (Script, ScriptError (..), evaluateScript)
@@ -73,9 +76,10 @@ class (HasLogicalModel p m, HasParameterisedGenerator p m) => ScriptModel p m wh
       | scenario <- enumerateScenariosWhere condition
       ]
 
+
   runScriptTest :: m :+ p -> Set p -> Property
-  runScriptTest apropos targetProperties = genProp $ do
-    (m :: m) <- parameterisedGenerator targetProperties
+  runScriptTest apropos targetProperties = property . void . forAll $ do
+    (m :: m) <- traversalAsGen $ parameterisedGenerator targetProperties
     case evaluateScript $ script apropos m of
       Left (EvaluationError logs err) -> deliverResult apropos m (Left (logs, err))
       Right res -> deliverResult apropos m (Right res)
@@ -90,8 +94,8 @@ class (HasLogicalModel p m, HasParameterisedGenerator p m) => ScriptModel p m wh
 
   enumerateScriptTest :: m :+ p -> Set p -> Property
   enumerateScriptTest apropos targetProperties = withTests (1 :: TestLimit) $
-    genProp $ do
-      let ms = enumerate $ parameterisedGenerator targetProperties
+    property . void . forAll $ do
+      let ms = enumerate $ traversalAsGen $ parameterisedGenerator targetProperties
       let run m = case evaluateScript $ script apropos m of
             Left (EvaluationError logs err) -> deliverResult apropos m (Left (logs, err))
             Right res -> deliverResult apropos m (Right res)

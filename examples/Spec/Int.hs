@@ -11,6 +11,8 @@ import Apropos
 import Apropos.Script
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.Hedgehog (fromGroup)
+import GHC.Generics (Generic)
+import Data.Hashable (Hashable)
 
 import Plutarch (compile)
 import Plutarch.Prelude
@@ -23,10 +25,8 @@ data IntProp
   | IsSmall
   | IsMaxBound
   | IsMinBound
-  deriving stock (Eq, Ord, Enum, Show, Bounded)
-
-instance Enumerable IntProp where
-  enumerated = [minBound .. maxBound]
+  deriving stock (Eq, Ord, Enum, Show, Bounded,Generic)
+  deriving anyclass (Enumerable,Hashable)
 
 instance LogicalModel IntProp where
   logic =
@@ -46,7 +46,7 @@ instance HasLogicalModel IntProp Int where
   satisfiesProperty IsSmall i = i <= 10 && i >= -10
 
 instance HasParameterisedGenerator IntProp Int where
-  parameterisedGenerator s = do
+  parameterisedGenerator s = Source $ do
     i <-
       if IsZero `elem` s
         then pure 0

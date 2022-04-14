@@ -12,6 +12,8 @@ import Plutarch (compile)
 import Plutarch.Prelude
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.Hedgehog (fromGroup)
+import GHC.Generics(Generic)
+import Data.Hashable(Hashable)
 
 data IntProp
   = IsNegative
@@ -21,10 +23,8 @@ data IntProp
   | IsSmall
   | IsMaxBound
   | IsMinBound
-  deriving stock (Eq, Ord, Enum, Show, Bounded)
-
-instance Enumerable IntProp where
-  enumerated = [minBound .. maxBound]
+  deriving stock (Eq, Ord, Enum, Show, Bounded,Generic)
+  deriving anyclass (Hashable,Enumerable)
 
 instance LogicalModel IntProp where
   logic =
