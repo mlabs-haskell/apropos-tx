@@ -28,11 +28,10 @@ dCert :: Gen DCert
 dCert = do
   choice
     [ DCertDelegRegKey <$> stakingCredential
-    , DCertDelegDeRegKey <$> stakingCredential 
+    , DCertDelegDeRegKey <$> stakingCredential
     , DCertDelegDelegate <$> stakingCredential <*> pubKeyHash
     , DCertPoolRegister <$> pubKeyHash <*> pubKeyHash
     , DCertPoolRetire <$> pubKeyHash <*> integer (linear 0 300)
     , return DCertGenesis
     , return DCertMir
     ]
-
