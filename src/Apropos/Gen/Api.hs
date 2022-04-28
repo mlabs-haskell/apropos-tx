@@ -12,7 +12,7 @@ module Apropos.Gen.Api (
   -- builtinData,
 ) where
 
-import Apropos.Gen (Gen, element, int, linear, list, singleton)
+import Apropos.Gen (Gen, choice, int, linear, list, singleton)
 import Apropos.Gen.Extra (integer, pair, sha256)
 import PlutusTx (Data (B, Constr, I, List, Map))
 import PlutusTx.Builtins.Internal (
@@ -35,17 +35,15 @@ builtinData = do
 -- | TODO: Re-do; too slow. `Gen` for Plutus `Data`.
 data' :: Gen Data
 data' = do
-  let mapGen :: Gen [(Data, Data)]
-      mapGen = list (linear 0 20) $ pair data' data'
-  n <- integer $ linear minBound maxBound
-  b <- sha256
-  m <- mapGen
-  i <- int $ linear 0 50
-  l <- list (singleton i) data'
-  element
-    [ Constr (toInteger i) l
-    , Map m
-    , List l
-    , I n
-    , B b
+  let constrGen = do
+        len <- int (linear 0 50)
+        l <- list (singleton len) data'
+        let i = toInteger len
+        return $ Constr i l
+  choice
+    [ constrGen
+    , Map <$> list (linear 0 20) (pair data' data')
+    , List <$> list (linear 0 10) data'
+    , I <$> integer (linear minBound maxBound)
+    , B <$> sha256
     ]

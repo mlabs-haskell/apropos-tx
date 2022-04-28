@@ -56,15 +56,12 @@ integer r = toInteger <$> int r
 
 -- | Function producing a generator for a `Maybe` type.
 maybe ::
-  Show a =>
   -- | A generator for the type to be wrapped by the `Maybe`
   --   monad.
   Gen a ->
   -- | A generator for the desired `Maybe` type.
   Gen (Maybe a)
-maybe genA = do
-  x <- genA
-  element [Just x, Nothing]
+maybe genA = choice [Just <$> genA, return Nothing]
 
 {- | Given a generator for a key-type k and a value-type v
      returns a generator for a `Map` k v.

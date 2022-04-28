@@ -16,7 +16,7 @@ module Apropos.Gen.Contexts (
   txOutRef,
 ) where
 
-import Apropos.Gen (Gen, element, linear, list)
+import Apropos.Gen (Gen, choice, element, linear, list)
 import Apropos.Gen.Address (address)
 import Apropos.Gen.Credential (stakingCredential)
 import Apropos.Gen.Crypto (pubKeyHash)
@@ -106,15 +106,11 @@ txOut = do
 -- | `Gen` for Plutus `ScriptPurpose`s.
 scriptPurpose :: Gen ScriptPurpose
 scriptPurpose = do
-  c <- currencySymbol
-  t <- txOutRef
-  s <- stakingCredential
-  d <- dCert
-  element
-    [ Minting c
-    , Spending t
-    , Rewarding s
-    , Certifying d
+  choice
+    [ Minting <$> currencySymbol
+    , Spending <$> txOutRef
+    , Rewarding <$> stakingCredential
+    , Certifying <$> dCert
     ]
 
 -- | `Gen` for Plutus `TxOutRef`s.
