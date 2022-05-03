@@ -33,6 +33,9 @@
             chmod u+w $out/cabal.project
             cat $out/cabal-haskell.nix.project >> $out/cabal.project
           '';
+          aprfmt = pkgs.writeShellScriptBin "aprfmt" ''
+            ${pkgs.gnumake}/bin/make format cabalfmt nixpkgsfmt lint refactor
+          '';
         in
         (nixpkgsFor system).haskell-nix.cabalProject' {
           src = fakeSrc.outPath;
@@ -57,7 +60,16 @@
 
             # We use the ones from Nixpkgs, since they are cached reliably.
             # Eventually we will probably want to build these with haskell.nix.
-            nativeBuildInputs = with pkgs; [ cabal-install hlint (fourmoluFor system) fd haskellPackages.cabal-fmt nixpkgs-fmt coreutils ];
+            nativeBuildInputs = with pkgs; [
+              aprfmt
+              cabal-install
+              hlint
+              (fourmoluFor system)
+              nixpkgs-fmt
+              haskellPackages.cabal-fmt
+              haskellPackages.apply-refact
+              fd
+            ];
 
             additional = ps: [
               ps.plutarch
