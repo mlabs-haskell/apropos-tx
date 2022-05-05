@@ -65,10 +65,10 @@
             ];
           };
           sha256map = {
-            "https://github.com/Plutonomicon/plutarch"."f8b7eb06184112ae2bebdec5a8156010141a05d5" = "sha256-y9lalsaTFVEPCoE/P8d4bduJJLSBvVpo/791mI9kcO4=";
+            "https://github.com/Plutonomicon/plutarch"."8c90f412e040da2debefc3f31a388cdb99d52c62" = "sha256-1oildFtPUm68Cnbh2tGCABElaf/06GIHeyF8TUWsVig=";
             "https://github.com/mlabs-haskell/apropos"."0a487ad60a252d3a0c18433e800f608b26e89ed3" = "sha256-qZM8sU3MnaO2Rann2UuerLHwAYhqZfr+QK/0VdYj2fU=";
             "https://github.com/mlabs-haskell/digraph"."d4dfec22f6a6eb646dcfa9591eaca0a9be88d260" = "sha256-ytQkJ18tYs13rt66s4jdbaGa5mLNEIerF8u24PvyPLA=";
-            "https://github.com/input-output-hk/plutus.git"."6d8d25d1e84b2a4278da1036aab23da4161b8df8" = "o8m86TkI1dTo74YbE9CPPNrBfSDSrf//DMq+v2+woEY=";
+            "https://github.com/input-output-hk/plutus.git"."3b89c2809933d798cd2ac4c72f932e61b6b35223" = "sha256-IoExCHajsJF96TKz/o2JpALRaBbZC0hxTdqYR528sH0=";
             "https://github.com/Quid2/flat.git"."ee59880f47ab835dbd73bea0847dab7869fc20d8" = "lRFND+ZnZvAph6ZYkr9wl9VAx41pb3uSFP8Wc7idP9M=";
             "https://github.com/input-output-hk/cardano-crypto.git"."07397f0e50da97eaa0575d93bee7ac4b2b2576ec" = "oxIOVlgm07FAEmgGRF1C2me9TXqVxQulEOcJ22zpTRs=";
             "https://github.com/input-output-hk/cardano-base"."78b3928391b558fb1750228f63301ec371f13528" = "pBUTTcenaSLMovHKGsaddJ7Jh3okRTrtu5W7Rdu6RM4=";
