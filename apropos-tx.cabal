@@ -10,6 +10,7 @@ common lang
     BinaryLiterals
     ConstraintKinds
     DataKinds
+    DeriveAnyClass
     DeriveFunctor
     DeriveGeneric
     DeriveTraversable
@@ -65,8 +66,8 @@ common lang
 library
   import:          lang
   exposed-modules:
-    Apropos.Script
     Apropos.Builder
+    Apropos.Script
     Apropos.Tx
 
   hs-source-dirs:  src
