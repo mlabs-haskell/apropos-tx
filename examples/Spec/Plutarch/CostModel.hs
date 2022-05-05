@@ -72,7 +72,7 @@ instance ScriptModel CostModelProp Integer where
     let cost = fromIntegral $ 200 + i * 702
      in (ExMemory cost, ExMemory cost)
   modelCPUBounds i =
-    let cost = fromIntegral $ 29873 + i * 405620
+    let cost = fromIntegral $ 457935 * i + 22100
      in (ExCPU cost, ExCPU cost)
 
 addCostModelPlutarchTests :: TestTree

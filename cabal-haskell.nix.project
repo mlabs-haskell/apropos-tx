@@ -3,7 +3,7 @@
 source-repository-package
   type: git
   location: https://github.com/Plutonomicon/plutarch
-  tag: f8b7eb06184112ae2bebdec5a8156010141a05d5
+  tag: 8c90f412e040da2debefc3f31a388cdb99d52c62
 
 source-repository-package
   type: git
@@ -22,7 +22,7 @@ source-repository-package
     prettyprinter-configurable
     stubs/plutus-ghc-stub
   -- Update plutus revision here! Make sure this matches `cat ./nix/sources.json | jq '.plutus.rev'`
-  tag: 6d8d25d1e84b2a4278da1036aab23da4161b8df8
+  tag: 3b89c2809933d798cd2ac4c72f932e61b6b35223
 
 -- The following sections are copied from the 'plutus' repository cabal.project at the revision
 -- given above.
