@@ -33,6 +33,7 @@ common lang
     StandaloneDeriving
     TupleSections
     TypeApplications
+    TypeFamilies
     TypeOperators
     TypeSynonymInstances
     UndecidableInstances
@@ -65,6 +66,7 @@ library
   import:          lang
   exposed-modules:
     Apropos.Script
+    Apropos.Builder
     Apropos.Tx
 
   hs-source-dirs:  src
