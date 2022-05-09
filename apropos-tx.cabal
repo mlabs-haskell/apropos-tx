@@ -11,6 +11,7 @@ common lang
     BinaryLiterals
     ConstraintKinds
     DataKinds
+    DeriveAnyClass
     DeriveFunctor
     DeriveGeneric
     DeriveTraversable
@@ -30,6 +31,7 @@ common lang
     MultiParamTypeClasses
     NumericUnderscores
     OverloadedStrings
+    RecordWildCards
     ScopedTypeVariables
     StandaloneDeriving
     TupleSections
@@ -37,8 +39,6 @@ common lang
     TypeOperators
     TypeSynonymInstances
     UndecidableInstances
-    RecordWildCards
-    DeriveAnyClass
 
   build-depends:
     , apropos
