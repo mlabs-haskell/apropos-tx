@@ -37,6 +37,7 @@ common lang
     TypeOperators
     TypeSynonymInstances
     UndecidableInstances
+    RecordWildCards
 
   build-depends:
     , apropos
