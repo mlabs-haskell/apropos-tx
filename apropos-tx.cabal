@@ -38,6 +38,7 @@ common lang
     TypeSynonymInstances
     UndecidableInstances
     RecordWildCards
+    DeriveAnyClass
 
   build-depends:
     , apropos

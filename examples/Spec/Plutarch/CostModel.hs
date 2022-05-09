@@ -3,6 +3,7 @@
 module Spec.Plutarch.CostModel (
   addCostPropGenTests,
   addCostModelPlutarchTests,
+  addCostScriptModel,
 ) where
 
 import Apropos
@@ -56,30 +57,27 @@ addCostPropGenTests =
   testGroup "Spec.Plutarch.CostModel" $
     fromGroup
       <$> [ runGeneratorTestsWhere
-              (Apropos :: Integer :+ CostModelProp)
               "(+) Cost Model Script Generator"
-              Yes
+              (Yes @CostModelProp)
           ]
 
-instance ScriptModel CostModelProp Integer where
-  script _ = addCost
-  expect _ = Yes :: Formula CostModelProp
-
-  -- This is the cool bit. We can model the cost exactly. Neato.
-  -- If we build a higherarchichal model we can compose these.
-  modelMemoryBounds _ i =
-    let cost = fromIntegral $ 200 + i * 702
-     in (ExMemory cost, ExMemory cost)
-  modelCPUBounds _ i =
-    let cost = fromIntegral $ 29873 + i * 405620
-     in (ExCPU cost, ExCPU cost)
+addCostScriptModel :: ScriptModel CostModelProp Integer
+addCostScriptModel =
+  ScriptModel
+    { script = addCost
+    , expect = Yes
+    , -- This is the cool bit. We can model the cost exactly. Neato.
+      -- If we build a higherarchichal model we can compose these.
+      memoryBounds = \i -> let cost = fromIntegral $ 200 + i * 702 in (ExMemory cost, ExMemory cost)
+    , cpuBounds = \i -> let cost = fromIntegral $ 29873 + i * 405620 in (ExCPU cost, ExCPU cost)
+    }
 
 addCostModelPlutarchTests :: TestTree
 addCostModelPlutarchTests =
   testGroup "Plutarch.AdditionCostModel" $
     fromGroup
       <$> [ enumerateScriptTestsWhere
-              (Apropos :: Integer :+ CostModelProp)
+              addCostScriptModel
               "AdditionCostModel"
               Yes
           ]

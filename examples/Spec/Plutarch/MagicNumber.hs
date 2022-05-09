@@ -58,7 +58,6 @@ magicNumberPropGenTests =
   testGroup "Spec.Plutarch.MagicNumber" $
     fromGroup
       <$> [ enumerateGeneratorTestsWhere
-              (Apropos :: Script :+ MagicNumberProp)
               "Magic Number Script Generator"
-              Yes
+              (Yes @MagicNumberProp)
           ]

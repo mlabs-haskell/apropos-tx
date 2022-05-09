@@ -4,6 +4,8 @@ module Spec.Int (
   IntProp (..),
   intGenTests,
   intPureTests,
+  intPureRunner,
+  intScriptModel,
   intPlutarchTests,
 ) where
 
@@ -68,29 +70,35 @@ intGenTests :: TestTree
 intGenTests =
   testGroup "intGenTests" $
     fromGroup
-      <$> [ runGeneratorTestsWhere (Apropos :: Int :+ IntProp) "Int Generator" Yes
+      <$> [ runGeneratorTestsWhere "Int Generator" (Yes @IntProp)
           ]
 
-instance HasPureRunner IntProp Int where
-  expect _ = Var IsSmall :&&: Var IsNegative
-  script _ i = i < 0 && i >= -10
+intPureRunner :: PureRunner IntProp Int
+intPureRunner =
+  PureRunner
+    { expect = Var IsSmall :&&: Var IsNegative
+    , script = \i -> i < 0 && i >= -10
+    }
 
 intPureTests :: TestTree
 intPureTests =
   testGroup "intPureTests" $
     fromGroup
-      <$> [ runPureTestsWhere (Apropos :: Int :+ IntProp) "AcceptsSmallNegativeInts" Yes
+      <$> [ runPureTestsWhere intPureRunner "AcceptsSmallNegativeInts" Yes
           ]
 
-instance ScriptModel IntProp Int where
-  expect _ = Var IsSmall :&&: Var IsNegative
-  script _ i =
-    let ii = fromIntegral i :: Integer
-     in compile (pif ((fromInteger ii #< (0 :: Term s PInteger)) #&& ((fromInteger (-10) :: Term s PInteger) #<= fromInteger ii)) (pcon PUnit) perror)
+intScriptModel :: ScriptModel IntProp Int
+intScriptModel =
+  ignoreBoundsScriptModel
+    { expect = Var IsSmall :&&: Var IsNegative
+    , script = \i ->
+        let ii = fromIntegral i :: Integer
+         in compile (pif ((fromInteger ii #< (0 :: Term s PInteger)) #&& ((fromInteger (-10) :: Term s PInteger) #<= fromInteger ii)) (pcon PUnit) perror)
+    }
 
 intPlutarchTests :: TestTree
 intPlutarchTests =
   testGroup "intPlutarchTests" $
     fromGroup
-      <$> [ runScriptTestsWhere (Apropos :: Int :+ IntProp) "AcceptsSmallNegativeInts" Yes
+      <$> [ runScriptTestsWhere intScriptModel "AcceptsSmallNegativeInts" Yes
           ]
