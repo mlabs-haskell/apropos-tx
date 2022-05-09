@@ -4,6 +4,7 @@ module Apropos.Script (
   runScriptTest,
   enumerateScriptTestsWhere,
   enumerateScriptTest,
+  ignoreBoundsScriptModel,
 ) where
 
 import Apropos.Gen
@@ -41,17 +42,20 @@ import Text.PrettyPrint qualified as PP
 import Text.Show.Pretty (ppDoc)
 import Prelude (
   Bool (..),
+  Bounded (..),
   Either (..),
   Int,
   Monad ((>>=)),
   Ord,
   Show (..),
   String,
+  const,
   fmap,
   fst,
   pure,
   sequence_,
   snd,
+  undefined,
   zip,
   ($),
   (&&),
@@ -65,9 +69,19 @@ import Prelude (
 data ScriptModel p m = ScriptModel
   { expect :: Formula p
   , script :: m -> Script
-  , memoryBounds :: (ExMemory, ExMemory)
-  , cpuBounds :: (ExCPU, ExCPU)
+  , memoryBounds :: m -> (ExMemory, ExMemory)
+  , cpuBounds :: m -> (ExCPU, ExCPU)
   }
+
+-- TODO: maybe use 'Default' here instead
+ignoreBoundsScriptModel :: ScriptModel p m
+ignoreBoundsScriptModel =
+  ScriptModel
+    { expect = undefined
+    , script = undefined
+    , memoryBounds = const (ExMemory minBound, ExMemory maxBound)
+    , cpuBounds = const (ExCPU minBound, ExCPU maxBound)
+    }
 
 runScriptTestsWhere ::
   forall p m.
@@ -144,7 +158,7 @@ deliverResult ScriptModel {..} model res =
     shouldPass = satisfiesFormula expect $ properties model
     successWithBudgetCheck :: ExBudget -> Gen ()
     successWithBudgetCheck cost@(ExBudget cpu mem) =
-      if inInterval cpu cpuBounds && inInterval mem memoryBounds
+      if inInterval cpu (cpuBounds model) && inInterval mem (memoryBounds model)
         then pure ()
         else failWithFootnote $ budgetCheckFailure cost
       where
@@ -154,9 +168,9 @@ deliverResult ScriptModel {..} model res =
     budgetCheckFailure cost =
       renderStyle ourStyle $
         "Success! But at what cost?"
-          $+$ hang "Lower Bound" 4 (ppDoc (ExBudget (fst cpuBounds) (fst memoryBounds)))
+          $+$ hang "Lower Bound" 4 (ppDoc (ExBudget (fst $ cpuBounds model) (fst $ memoryBounds model)))
           $+$ hang "Actual Cost" 4 (ppDoc cost)
-          $+$ hang "Upper Bound" 4 (ppDoc (ExBudget (snd cpuBounds) (snd memoryBounds)))
+          $+$ hang "Upper Bound" 4 (ppDoc (ExBudget (snd $ cpuBounds model) (snd $ memoryBounds model)))
     unexpectedSuccess :: [Text] -> String
     unexpectedSuccess logs =
       renderStyle ourStyle $
