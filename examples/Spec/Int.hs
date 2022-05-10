@@ -71,15 +71,18 @@ intGenTests =
       <$> [ runGeneratorTestsWhere @IntProp "Int Generator" Yes
           ]
 
-instance HasPureRunner IntProp Int where
-  expect = Var IsSmall :&&: Var IsNegative
-  script i = i < 0 && i >= -10
+intPureRunner :: PureRunner IntProp Int
+intPureRunner =
+  PureRunner
+    { expect = Var IsSmall :&&: Var IsNegative
+    , script = \i -> i < 0 && i >= -10
+    }
 
 intPureTests :: TestTree
 intPureTests =
   testGroup "intPureTests" $
     fromGroup
-      <$> [ runPureTestsWhere @IntProp "AcceptsSmallNegativeInts" Yes
+      <$> [ runPureTestsWhere intPureRunner "AcceptsSmallNegativeInts" (Yes @IntProp)
           ]
 
 instance ScriptModel IntProp Int where
