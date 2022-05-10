@@ -30,7 +30,8 @@ addCost :: Integer -> Script
 addCost i = compile $ peano i
 
 data CostModelProp = ThisManyAdditions Integer
-  deriving stock (Eq, Ord, Show)
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving anyclass (Hashable)
 
 instance Enumerable CostModelProp where
   enumerated = [ThisManyAdditions i | i <- [0 .. numCostModels]]
@@ -38,6 +39,7 @@ instance Enumerable CostModelProp where
 instance LogicalModel CostModelProp where
   logic =
     ExactlyOne (Var <$> enumerated)
+      -- TODO this is redundant right?
       :&&: Some (Var <$> enumerated)
 
 instance HasLogicalModel CostModelProp Integer where
@@ -55,22 +57,21 @@ addCostPropGenTests :: TestTree
 addCostPropGenTests =
   testGroup "Spec.Plutarch.CostModel" $
     fromGroup
-      <$> [ runGeneratorTestsWhere
-              (Apropos :: Integer :+ CostModelProp)
+      <$> [ runGeneratorTestsWhere @CostModelProp
               "(+) Cost Model Script Generator"
               Yes
           ]
 
 instance ScriptModel CostModelProp Integer where
-  script _ = addCost
-  expect _ = Yes :: Formula CostModelProp
+  script = addCost
+  expect = Yes :: Formula CostModelProp
 
   -- This is the cool bit. We can model the cost exactly. Neato.
   -- If we build a higherarchichal model we can compose these.
-  modelMemoryBounds _ i =
+  modelMemoryBounds i =
     let cost = fromIntegral $ 200 + i * 702
      in (ExMemory cost, ExMemory cost)
-  modelCPUBounds _ i =
+  modelCPUBounds i =
     let cost = fromIntegral $ 29873 + i * 405620
      in (ExCPU cost, ExCPU cost)
 
@@ -78,8 +79,7 @@ addCostModelPlutarchTests :: TestTree
 addCostModelPlutarchTests =
   testGroup "Plutarch.AdditionCostModel" $
     fromGroup
-      <$> [ enumerateScriptTestsWhere
-              (Apropos :: Integer :+ CostModelProp)
+      <$> [ enumerateScriptTestsWhere @CostModelProp
               "AdditionCostModel"
               Yes
           ]

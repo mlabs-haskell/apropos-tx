@@ -57,8 +57,7 @@ magicNumberPropGenTests :: TestTree
 magicNumberPropGenTests =
   testGroup "Spec.Plutarch.MagicNumber" $
     fromGroup
-      <$> [ enumerateGeneratorTestsWhere
-              (Apropos :: Script :+ MagicNumberProp)
+      <$> [ enumerateGeneratorTestsWhere @MagicNumberProp
               "Magic Number Script Generator"
               Yes
           ]
