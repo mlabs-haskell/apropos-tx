@@ -1,3 +1,5 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+
 module Apropos.Script (ScriptModel (..)) where
 
 import Apropos.Gen
@@ -5,7 +7,9 @@ import Apropos.Gen.Enumerate
 import Apropos.HasLogicalModel
 import Apropos.HasParameterisedGenerator
 import Apropos.LogicalModel
-import Apropos.Type
+
+--import Apropos.Type
+import Control.Monad (void, (=<<))
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.String (fromString)
@@ -14,6 +18,7 @@ import Hedgehog (
   Group (..),
   Property,
   TestLimit,
+  property,
   withTests,
  )
 import Plutus.V1.Ledger.Api (ExCPU (..), ExMemory (..))
@@ -57,53 +62,59 @@ import Prelude (
  )
 
 class (HasLogicalModel p m, HasParameterisedGenerator p m) => ScriptModel p m where
-  expect :: (m :+ p) -> Formula p
-  script :: (m :+ p) -> (m -> Script)
+  expect :: Formula p
+  script :: (m -> Script)
 
-  modelMemoryBounds :: (m :+ p) -> m -> (ExMemory, ExMemory)
-  modelMemoryBounds _ _ = (ExMemory minBound, ExMemory maxBound)
+  modelMemoryBounds :: m -> (ExMemory, ExMemory)
+  modelMemoryBounds _ = (ExMemory minBound, ExMemory maxBound)
 
-  modelCPUBounds :: (m :+ p) -> m -> (ExCPU, ExCPU)
-  modelCPUBounds _ _ = (ExCPU minBound, ExCPU maxBound)
+  modelCPUBounds :: m -> (ExCPU, ExCPU)
+  modelCPUBounds _ = (ExCPU minBound, ExCPU maxBound)
 
-  runScriptTestsWhere :: m :+ p -> String -> Formula p -> Group
-  runScriptTestsWhere apropos name condition =
+  runScriptTestsWhere :: String -> Formula p -> Group
+  runScriptTestsWhere name condition =
     Group (fromString name) $
-      [ (fromString $ show $ Set.toList scenario, runScriptTest apropos scenario)
+      [ (fromString $ show $ Set.toList scenario, runScriptTest scenario)
       | scenario <- enumerateScenariosWhere condition
       ]
 
-  runScriptTest :: m :+ p -> Set p -> Property
-  runScriptTest apropos targetProperties = genProp $ do
-    (m :: m) <- parameterisedGenerator targetProperties
-    case evaluateScript $ script apropos m of
-      Left (EvaluationError logs err) -> deliverResult apropos m (Left (logs, err))
-      Right res -> deliverResult apropos m (Right res)
-      Left err -> failWithFootnote (show err)
-
-  enumerateScriptTestsWhere :: m :+ p -> String -> Formula p -> Group
-  enumerateScriptTestsWhere apropos name condition =
-    Group (fromString name) $
-      [ (fromString $ show $ Set.toList scenario, enumerateScriptTest apropos scenario)
-      | scenario <- enumerateScenariosWhere condition
-      ]
-
-  enumerateScriptTest :: m :+ p -> Set p -> Property
-  enumerateScriptTest apropos targetProperties = withTests (1 :: TestLimit) $
-    genProp $ do
-      let ms = enumerate $ parameterisedGenerator targetProperties
-      let run m = case evaluateScript $ script apropos m of
-            Left (EvaluationError logs err) -> deliverResult apropos m (Left (logs, err))
-            Right res -> deliverResult apropos m (Right res)
+  runScriptTest :: Set p -> Property
+  runScriptTest targetProperties = property $
+    (errorHandler =<<) $
+      runGenModifiable $
+        forAll $ do
+          (m :: m) <- parameterisedGenerator targetProperties
+          case evaluateScript $ script @p m of
+            Left (EvaluationError logs err) -> deliverResult @p m (Left (logs, err))
+            Right res -> deliverResult @p m (Right res)
             Left err -> failWithFootnote (show err)
-      sequence (run <$> ms)
+
+  enumerateScriptTestsWhere :: String -> Formula p -> Group
+  enumerateScriptTestsWhere name condition =
+    Group (fromString name) $
+      [ (fromString $ show $ Set.toList scenario, enumerateScriptTest scenario)
+      | scenario <- enumerateScenariosWhere condition
+      ]
+
+  enumerateScriptTest :: Set p -> Property
+  enumerateScriptTest targetProperties = withTests (1 :: TestLimit) $
+    property $
+      (errorHandler =<<) $
+        runGenModifiable $
+          void $
+            forAll $ do
+              let ms = enumerate $ parameterisedGenerator targetProperties
+              let run m = case evaluateScript $ script @p m of
+                    Left (EvaluationError logs err) -> deliverResult @p m (Left (logs, err))
+                    Right res -> deliverResult @p m (Right res)
+                    Left err -> failWithFootnote (show err)
+              sequence (run <$> ms)
 
   deliverResult ::
-    m :+ p ->
     m ->
     Either ([Text], String) (ExBudget, [Text]) ->
     Gen ()
-  deliverResult apropos model res =
+  deliverResult model res =
     case (shouldPass, res) of
       (False, Left _) -> pure ()
       (True, Right (cost, _)) -> successWithBudgetCheck cost
@@ -111,10 +122,10 @@ class (HasLogicalModel p m, HasParameterisedGenerator p m) => ScriptModel p m wh
       (False, Right (_, logs)) -> failWithFootnote $ unexpectedSuccess logs
     where
       shouldPass :: Bool
-      shouldPass = satisfiesFormula (expect apropos) $ properties model
+      shouldPass = satisfiesFormula @p expect $ properties model
       successWithBudgetCheck :: ExBudget -> Gen ()
       successWithBudgetCheck cost@(ExBudget cpu mem) =
-        if inInterval cpu (modelCPUBounds apropos model) && inInterval mem (modelMemoryBounds apropos model)
+        if inInterval cpu (modelCPUBounds @p model) && inInterval mem (modelMemoryBounds @p model)
           then pure ()
           else failWithFootnote $ budgetCheckFailure cost
         where
@@ -124,19 +135,19 @@ class (HasLogicalModel p m, HasParameterisedGenerator p m) => ScriptModel p m wh
       budgetCheckFailure cost =
         renderStyle ourStyle $
           "Success! But at what cost?"
-            $+$ hang "Lower Bound" 4 (ppDoc (ExBudget (fst (modelCPUBounds apropos model)) (fst (modelMemoryBounds apropos model))))
+            $+$ hang "Lower Bound" 4 (ppDoc (ExBudget (fst (modelCPUBounds @p model)) (fst (modelMemoryBounds @p model))))
             $+$ hang "Actual Cost" 4 (ppDoc cost)
-            $+$ hang "Upper Bound" 4 (ppDoc (ExBudget (snd (modelCPUBounds apropos model)) (snd (modelMemoryBounds apropos model))))
+            $+$ hang "Upper Bound" 4 (ppDoc (ExBudget (snd (modelCPUBounds @p model)) (snd (modelMemoryBounds @p model))))
       unexpectedSuccess :: [Text] -> String
       unexpectedSuccess logs =
         renderStyle ourStyle $
-          "Unexpected success" $+$ dumpState apropos logs
+          "Unexpected success" $+$ dumpState logs
       unexpectedFailure :: ([Text], String) -> String
       unexpectedFailure (logs, reason) =
         renderStyle ourStyle $
-          text ("Unexpected failure(" <> reason <> ")") $+$ dumpState apropos logs
-      dumpState :: m :+ p -> [Text] -> Doc
-      dumpState _ logs =
+          text ("Unexpected failure(" <> reason <> ")") $+$ dumpState logs
+      dumpState :: [Text] -> Doc
+      dumpState logs =
         ""
           $+$ hang "Inputs" 4 dumpInputs
           $+$ hang "Logs" 4 (dumpLogs logs)
