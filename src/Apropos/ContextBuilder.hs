@@ -1,12 +1,15 @@
 module Apropos.ContextBuilder (
   TxInfoBuilder (..),
   ScriptContextBuilder (..),
+  buildContext,
+  withTxInfo,
   nullTxId,
   nullTxOutRef,
 ) where
 
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.Trans.State (StateT, execStateT, get, modify)
+import Data.Functor.Identity (Identity, runIdentity)
 import Plutarch.Api.V1 (datumHash)
 import Plutus.V1.Ledger.Api (
   Address,
@@ -24,10 +27,21 @@ import Plutus.V1.Ledger.Api (
   TxOut (..),
   TxOutRef (..),
   Value (..),
+  toBuiltinData,
  )
 import Plutus.V1.Ledger.Interval (Extended (..), Interval (..), LowerBound (..), UpperBound (..))
-import Plutus.V1.Ledger.Scripts (Datum)
+import Plutus.V1.Ledger.Scripts (Context (..), Datum)
 import Plutus.V2.Ledger.Api (fromList)
+
+-- with concrete types and extra packaging for convenience
+buildContext :: StateT ScriptContext Identity () -> Context
+buildContext builder = Context $ toBuiltinData sc
+  where
+    sc = runIdentity $ buildScriptContext @(StateT ScriptContext) @Identity builder
+
+-- with concrete types for convenience
+withTxInfo :: StateT TxInfo Identity () -> StateT ScriptContext Identity ()
+withTxInfo = withTxInfoBuilder
 
 nullTxId :: TxId
 nullTxId = TxId "0000000000000000000000000000000000000000000000000000000000000000"
