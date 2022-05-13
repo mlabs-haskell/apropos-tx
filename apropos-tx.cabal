@@ -66,6 +66,7 @@ library
   import:          lang
   exposed-modules:
     Apropos.Script
+    Apropos.ContextBuilder
     Apropos.Tx
 
   hs-source-dirs:  src
