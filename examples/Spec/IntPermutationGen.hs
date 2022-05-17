@@ -91,9 +91,8 @@ intPermutationGenTests :: TestTree
 intPermutationGenTests =
   testGroup "intPermutationGenTests" $
     fromGroup
-      <$> [ runGeneratorTestsWhere "Int Generator" (Yes @IntProp)
+      <$> [ runGeneratorTestsWhere @IntProp "Int Generator" Yes
           ]
-
 intPermutationPureRunner :: PureRunner IntProp Int
 intPermutationPureRunner =
   PureRunner

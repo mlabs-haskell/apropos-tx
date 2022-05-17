@@ -20,9 +20,9 @@ import Hedgehog (
   Group (..),
   Property,
   TestLimit,
+  property,
   withTests,
  )
-import Hedgehog.Internal.Property (property)
 import Plutus.V1.Ledger.Api (ExCPU (..), ExMemory (..))
 import Plutus.V1.Ledger.Scripts (Script, ScriptError (..), evaluateScript)
 import PlutusCore.Evaluation.Machine.ExBudget (ExBudget (..))
