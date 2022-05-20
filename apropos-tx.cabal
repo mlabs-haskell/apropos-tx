@@ -65,6 +65,7 @@ common lang
 library
   import:          lang
   exposed-modules:
+    Apropos.ContextBuilder
     Apropos.Script
     Apropos.Tx
 
