@@ -60,7 +60,7 @@ import Prelude (
   (>=),
  )
 
-class (Enumerable p,HasLogicalModel p m, HasParameterisedGenerator p m) => ScriptModel p m where
+class (Enumerable p, HasLogicalModel p m, HasParameterisedGenerator p m) => ScriptModel p m where
   expect :: Formula p
   script :: (m -> Script)
 
