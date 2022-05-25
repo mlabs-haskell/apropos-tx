@@ -8,7 +8,6 @@ import Apropos.HasLogicalModel
 import Apropos.HasParameterisedGenerator
 import Apropos.LogicalModel
 
---import Apropos.Type
 import Control.Monad (void, (=<<))
 import Data.Set (Set)
 import Data.Set qualified as Set
@@ -61,7 +60,7 @@ import Prelude (
   (>=),
  )
 
-class (HasLogicalModel p m, HasParameterisedGenerator p m) => ScriptModel p m where
+class (Enumerable p, HasLogicalModel p m, HasParameterisedGenerator p m) => ScriptModel p m where
   expect :: Formula p
   script :: (m -> Script)
 
