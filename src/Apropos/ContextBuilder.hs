@@ -1,6 +1,8 @@
 module Apropos.ContextBuilder (
   TxInfoBuilder (..),
   ScriptContextBuilder (..),
+  TxInInfo' (..),
+  TxOut' (..),
   buildContext,
   withTxInfo,
   nullTxId,
@@ -32,6 +34,10 @@ import Plutus.V1.Ledger.Api (
 import Plutus.V1.Ledger.Interval (Extended (..), Interval (..), LowerBound (..), UpperBound (..))
 import Plutus.V1.Ledger.Scripts (Context (..), Datum)
 import Plutus.V2.Ledger.Api (fromList)
+
+-- Inline datum types
+data TxInInfo' = TxInInfo' TxOutRef TxOut'
+data TxOut' = TxOut' Address Value (Maybe Datum)
 
 -- with concrete types and extra packaging for convenience
 buildContext :: StateT ScriptContext Identity () -> Context
@@ -86,8 +92,8 @@ emptyTxInfo =
 class (MonadTrans t, Monad m) => TxInfoBuilder t m where
   runTxInfoBuilder :: TxInfo -> t m () -> m TxInfo
   buildTxInfo :: t m () -> m TxInfo
-  addInput :: TxOutRef -> Address -> Value -> Maybe Datum -> t m ()
-  addOutput :: Address -> Value -> Maybe Datum -> t m ()
+  addInput :: TxInInfo' -> t m ()
+  addOutput :: TxOut' -> t m ()
 
   addFee :: Value -> t m ()
   mint :: Value -> t m ()
@@ -124,7 +130,7 @@ class (MonadTrans t, Monad m) => TxInfoBuilder t m where
 instance Monad m => TxInfoBuilder (StateT TxInfo) m where
   runTxInfoBuilder = flip execStateT
   buildTxInfo = runTxInfoBuilder emptyTxInfo
-  addInput r a v d =
+  addInput (TxInInfo' r (TxOut' a v d)) =
     let i = TxInInfo r (TxOut a v (datumHash <$> d))
         addDatum = case d of
           Nothing -> id
@@ -136,7 +142,7 @@ instance Monad m => TxInfoBuilder (StateT TxInfo) m where
                 , txInfoData = addDatum (txInfoData txi)
                 }
           )
-  addOutput a v d =
+  addOutput (TxOut' a v d) =
     let i = TxOut a v (datumHash <$> d)
         addDatum = case d of
           Nothing -> id
