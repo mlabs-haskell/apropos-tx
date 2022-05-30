@@ -7,6 +7,7 @@ module Spec.Plutarch.CostModel (
 
 import Apropos
 import Apropos.Script
+import Apropos.LogicalModel
 
 import Data.Set qualified as Set
 
@@ -47,7 +48,7 @@ instance HasLogicalModel CostModelProp Integer where
 
 -- there is no randomness here
 -- HasParameterisedEnumerator would make more sense for this.
-instance HasParameterisedGenerator CostModelProp Integer where
+instance HasParameterisedGenerator (Prop CostModelProp) Integer where
   parameterisedGenerator s =
     case Set.toList s of
       [ThisManyAdditions i] -> pure i
@@ -57,14 +58,14 @@ addCostPropGenTests :: TestTree
 addCostPropGenTests =
   testGroup "Spec.Plutarch.CostModel" $
     fromGroup
-      <$> [ runGeneratorTestsWhere @CostModelProp
+      <$> [ runGeneratorTestsWhere @(Prop CostModelProp)
               "(+) Cost Model Script Generator"
               Yes
           ]
 
-instance ScriptModel CostModelProp Integer where
+instance ScriptModel (Prop CostModelProp) Integer where
   script = addCost
-  expect = Yes :: Formula CostModelProp
+  expect = Yes :: Formula (Prop CostModelProp)
 
   -- This is the cool bit. We can model the cost exactly. Neato.
   -- If we build a higherarchichal model we can compose these.
@@ -79,7 +80,7 @@ addCostModelPlutarchTests :: TestTree
 addCostModelPlutarchTests =
   testGroup "Plutarch.AdditionCostModel" $
     fromGroup
-      <$> [ enumerateScriptTestsWhere @CostModelProp
+      <$> [ enumerateScriptTestsWhere @(Prop CostModelProp)
               "AdditionCostModel"
               Yes
           ]

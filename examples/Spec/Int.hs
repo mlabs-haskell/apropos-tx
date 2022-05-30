@@ -8,6 +8,7 @@ module Spec.Int (
 ) where
 
 import Apropos
+import Apropos.LogicalModel
 import Apropos.Script
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.Hedgehog (fromGroup)
@@ -45,7 +46,7 @@ instance HasLogicalModel IntProp Int where
   satisfiesProperty IsLarge i = i > 10 || i < -10
   satisfiesProperty IsSmall i = i <= 10 && i >= -10
 
-instance HasParameterisedGenerator IntProp Int where
+instance HasParameterisedGenerator (Prop IntProp) Int where
   parameterisedGenerator s = do
     i <-
       if IsZero `elem` s
@@ -68,13 +69,13 @@ intGenTests :: TestTree
 intGenTests =
   testGroup "intGenTests" $
     fromGroup
-      <$> [ runGeneratorTestsWhere @IntProp "Int Generator" Yes
+      <$> [ runGeneratorTestsWhere @(Prop IntProp) "Int Generator" Yes
           ]
 
-intPureRunner :: PureRunner IntProp Int
+intPureRunner :: PureRunner (Prop IntProp) Int
 intPureRunner =
   PureRunner
-    { expect = Var IsSmall :&&: Var IsNegative
+    { expect = Var (Prop IsSmall) :&&: Var (Prop IsNegative)
     , script = \i -> i < 0 && i >= -10
     }
 
@@ -82,11 +83,11 @@ intPureTests :: TestTree
 intPureTests =
   testGroup "intPureTests" $
     fromGroup
-      <$> [ runPureTestsWhere intPureRunner "AcceptsSmallNegativeInts" (Yes @IntProp)
+      <$> [ runPureTestsWhere intPureRunner "AcceptsSmallNegativeInts" (Yes @(Prop IntProp))
           ]
 
-instance ScriptModel IntProp Int where
-  expect = Var IsSmall :&&: Var IsNegative
+instance ScriptModel (Prop IntProp) Int where
+  expect = Var (Prop IsSmall) :&&: Var (Prop IsNegative)
   script i =
     let ii = fromIntegral i :: Integer
      in compile (pif ((fromInteger ii #< (0 :: Term s PInteger)) #&& ((fromInteger (-10) :: Term s PInteger) #<= fromInteger ii)) (pcon PUnit) perror)
@@ -95,5 +96,5 @@ intPlutarchTests :: TestTree
 intPlutarchTests =
   testGroup "intPlutarchTests" $
     fromGroup
-      <$> [ runScriptTestsWhere @IntProp "AcceptsSmallNegativeInts" Yes
+      <$> [ runScriptTestsWhere @(Prop IntProp) "AcceptsSmallNegativeInts" Yes
           ]

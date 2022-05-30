@@ -8,6 +8,7 @@ module Spec.IntPermutationGen (
 
 import Apropos
 import Apropos.Script
+import Apropos.LogicalModel
 import Plutarch (compile)
 import Plutarch.Prelude
 import Test.Tasty (TestTree, testGroup)
@@ -41,31 +42,31 @@ instance HasLogicalModel IntProp Int where
   satisfiesProperty IsLarge i = i > 10 || i < -10
   satisfiesProperty IsSmall i = i <= 10 && i >= -10
 
-instance HasPermutationGenerator IntProp Int where
+instance HasPermutationGenerator (Prop IntProp) Int where
   sources =
     [ Source
         { sourceName = "MakeZero"
-        , covers = Var IsZero :&&: Var IsSmall
+        , covers = Prop <$> Var IsZero :&&: Var IsSmall
         , gen = pure 0
         }
     , Source
         { sourceName = "MakeMaxBound"
-        , covers = Var IsMaxBound :&&: Var IsLarge :&&: Var IsPositive
+        , covers = Prop <$> Var IsMaxBound :&&: Var IsLarge :&&: Var IsPositive
         , gen = pure maxBound
         }
     , Source
         { sourceName = "MakeMinBound"
-        , covers = Var IsMinBound :&&: Var IsLarge :&&: Var IsNegative
+        , covers = Prop <$> Var IsMinBound :&&: Var IsLarge :&&: Var IsNegative
         , gen = pure minBound
         }
     , Source
         { sourceName = "MakeLarge"
-        , covers = Var IsLarge :&&: Var IsPositive :&&: Not (Var IsMaxBound :||: Var IsMinBound)
+        , covers = Prop <$> Var IsLarge :&&: Var IsPositive :&&: Not (Var IsMaxBound :||: Var IsMinBound)
         , gen = int (linear 11 (maxBound - 1))
         }
     , Source
         { sourceName = "MakeSmall"
-        , covers = Var IsSmall :&&: Var IsPositive
+        , covers = Prop <$> Var IsSmall :&&: Var IsPositive
         , gen = int (linear 1 10)
         }
     ]
@@ -73,30 +74,30 @@ instance HasPermutationGenerator IntProp Int where
   generators =
     [ Morphism
         { name = "Negate"
-        , match = Not $ Var IsZero
+        , match = Not $ Var (Prop IsZero)
         , contract =
             branches
-              [ has IsNegative >> remove IsNegative >> add IsPositive
-              , has IsPositive >> remove IsPositive >> add IsNegative
+              [ has (Prop IsNegative) >> remove (Prop IsNegative) >> add (Prop IsPositive)
+              , has (Prop IsPositive) >> remove (Prop IsPositive) >> add (Prop IsNegative)
               ]
         , morphism = \i -> pure (-i)
         }
     ]
 
-instance HasParameterisedGenerator IntProp Int where
-  parameterisedGenerator = buildGen
+instance HasParameterisedGenerator (Prop IntProp) Int where
+  parameterisedGenerator = buildGen @(Prop IntProp)
 
 intPermutationGenTests :: TestTree
 intPermutationGenTests =
   testGroup "intPermutationGenTests" $
     fromGroup
-      <$> [ runGeneratorTestsWhere @IntProp "Int Generator" Yes
+      <$> [ runGeneratorTestsWhere @(Prop IntProp) "Int Generator" Yes
           ]
 
-intPureRunner :: PureRunner IntProp Int
+intPureRunner :: PureRunner (Prop IntProp) Int
 intPureRunner =
   PureRunner
-    { expect = Var IsSmall :&&: Var IsNegative
+    { expect = Prop <$> Var IsSmall :&&: Var IsNegative
     , script = \i -> i < 0 && i >= -10
     }
 
@@ -104,11 +105,11 @@ intPermutationGenPureTests :: TestTree
 intPermutationGenPureTests =
   testGroup "intPermutationGenPureTests" $
     fromGroup
-      <$> [ runPureTestsWhere intPureRunner "AcceptsSmallNegativeInts" (Yes @IntProp)
+      <$> [ runPureTestsWhere intPureRunner "AcceptsSmallNegativeInts" (Yes @(Prop IntProp))
           ]
 
-instance ScriptModel IntProp Int where
-  expect = Var IsSmall :&&: Var IsNegative
+instance ScriptModel (Prop IntProp) Int where
+  expect = Prop <$> Var IsSmall :&&: Var IsNegative
   script i =
     let ii = fromIntegral i :: Integer
      in compile (pif ((fromInteger ii #< (0 :: Term s PInteger)) #&& ((fromInteger (-10) :: Term s PInteger) #<= fromInteger ii)) (pcon PUnit) perror)
@@ -117,7 +118,7 @@ intPermutationGenPlutarchTests :: TestTree
 intPermutationGenPlutarchTests =
   testGroup "intPermutationGenPlutarchTests" $
     fromGroup
-      <$> [ runScriptTestsWhere @IntProp "AcceptsSmallNegativeInts" Yes
+      <$> [ runScriptTestsWhere @(Prop IntProp) "AcceptsSmallNegativeInts" Yes
           ]
 
 intPermutationGenSelfTests :: TestTree
@@ -125,4 +126,4 @@ intPermutationGenSelfTests =
   testGroup "intPermutationGenSelfTests" $
     pure $
       fromGroup $
-        permutationGeneratorSelfTest @IntProp
+        permutationGeneratorSelfTest @(Prop IntProp)

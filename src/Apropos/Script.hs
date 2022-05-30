@@ -1,16 +1,14 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE DefaultSignatures #-}
 
 module Apropos.Script (ScriptModel (..)) where
 
 import Apropos.Gen
 import Apropos.Gen.Enumerate
-import Apropos.HasLogicalModel
+import Apropos.Logic
 import Apropos.HasParameterisedGenerator
-import Apropos.LogicalModel
 
 import Control.Monad (void, (=<<))
-import Data.Set (Set)
-import Data.Set qualified as Set
 import Data.String (fromString)
 import Data.Text (Text)
 import Hedgehog (
@@ -60,7 +58,7 @@ import Prelude (
   (>=),
  )
 
-class (Enumerable p, HasLogicalModel p m, HasParameterisedGenerator p m) => ScriptModel p m where
+class (HasParameterisedGenerator p m) => ScriptModel p m where
   expect :: Formula p
   script :: (m -> Script)
 
@@ -71,38 +69,40 @@ class (Enumerable p, HasLogicalModel p m, HasParameterisedGenerator p m) => Scri
   modelCPUBounds _ = (ExCPU minBound, ExCPU maxBound)
 
   runScriptTestsWhere :: String -> Formula p -> Group
+  default runScriptTestsWhere :: (Ord p, Show (Properties p)) => String -> Formula p -> Group
   runScriptTestsWhere name condition =
     Group (fromString name) $
-      [ (fromString $ show $ Set.toList scenario, runScriptTest scenario)
-      | scenario <- enumerateScenariosWhere condition
+      [ (fromString $ show scenario, runScriptTest @p scenario)
+      | scenario <- variablesToProperties <$> enumerateScenariosWhere condition
       ]
 
-  runScriptTest :: Set p -> Property
+  runScriptTest :: Properties p -> Property
   runScriptTest targetProperties = property $
     (errorHandler =<<) $
       runGenModifiable $
         forAll $ do
-          (m :: m) <- parameterisedGenerator targetProperties
+          (m :: m) <- parameterisedGenerator @p targetProperties
           case evaluateScript $ script @p m of
             Left (EvaluationError logs err) -> deliverResult @p m (Left (logs, err))
             Right res -> deliverResult @p m (Right res)
             Left err -> failWithFootnote (show err)
 
   enumerateScriptTestsWhere :: String -> Formula p -> Group
+  default enumerateScriptTestsWhere :: (Ord p, Show (Properties p)) => String -> Formula p -> Group
   enumerateScriptTestsWhere name condition =
     Group (fromString name) $
-      [ (fromString $ show $ Set.toList scenario, enumerateScriptTest scenario)
-      | scenario <- enumerateScenariosWhere condition
+      [ (fromString $ show scenario, enumerateScriptTest @p scenario)
+      | scenario <- variablesToProperties <$> enumerateScenariosWhere condition
       ]
 
-  enumerateScriptTest :: Set p -> Property
+  enumerateScriptTest :: Properties p -> Property
   enumerateScriptTest targetProperties = withTests (1 :: TestLimit) $
     property $
       (errorHandler =<<) $
         runGenModifiable $
           void $
             forAll $ do
-              let ms = enumerate $ parameterisedGenerator targetProperties
+              let ms = enumerate $ parameterisedGenerator @p targetProperties
               let run m = case evaluateScript $ script @p m of
                     Left (EvaluationError logs err) -> deliverResult @p m (Left (logs, err))
                     Right res -> deliverResult @p m (Right res)
@@ -110,6 +110,11 @@ class (Enumerable p, HasLogicalModel p m, HasParameterisedGenerator p m) => Scri
               sequence (run <$> ms)
 
   deliverResult ::
+    m ->
+    Either ([Text], String) (ExBudget, [Text]) ->
+    Gen ()
+  default deliverResult ::
+    (Ord p, Show (Properties p)) =>
     m ->
     Either ([Text], String) (ExBudget, [Text]) ->
     Gen ()
@@ -121,7 +126,7 @@ class (Enumerable p, HasLogicalModel p m, HasParameterisedGenerator p m) => Scri
       (False, Right (_, logs)) -> failWithFootnote $ unexpectedSuccess logs
     where
       shouldPass :: Bool
-      shouldPass = satisfiesFormula @p expect $ properties model
+      shouldPass = satisfiesFormula @p expect $ toProperties @p model
       successWithBudgetCheck :: ExBudget -> Gen ()
       successWithBudgetCheck cost@(ExBudget cpu mem) =
         if inInterval cpu (modelCPUBounds @p model) && inInterval mem (modelMemoryBounds @p model)
@@ -151,7 +156,7 @@ class (Enumerable p, HasLogicalModel p m, HasParameterisedGenerator p m) => Scri
           $+$ hang "Inputs" 4 dumpInputs
           $+$ hang "Logs" 4 (dumpLogs logs)
           $+$ hang "Expected " 4 (if shouldPass then "Pass" else "Fail")
-          $+$ hang "Properties " 4 (ppDoc (properties model :: Set p))
+          $+$ hang "Properties " 4 (ppDoc (toProperties @p model))
       dumpInputs :: Doc
       dumpInputs =
         "Parameters"
