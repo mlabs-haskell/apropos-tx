@@ -8,3 +8,5 @@ benchmarks: true
 
 -- The only sensible test display option
 test-show-details: direct
+
+allow-newer: all

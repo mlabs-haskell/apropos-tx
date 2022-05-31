@@ -2,18 +2,101 @@
   description = "apropos-tx";
 
   inputs = {
-    haskell-nix.url = "github:input-output-hk/haskell.nix";
+    haskell-nix.url = "github:mlabs-haskell/haskell.nix";
     nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
     haskell-nix.inputs.nixpkgs.follows = "haskell-nix/nixpkgs-2105";
-    plutus.url = "github:input-output-hk/plutus"; # used for libsodium-vrf
     flake-compat-ci.url = "github:hercules-ci/flake-compat-ci";
     flake-compat = {
       url = "github:edolstra/flake-compat";
       flake = false;
     };
+
+    plutarch = {
+      # This rev was explicitly used before
+      url = "github:Plutonomicon/plutarch?rev=ae2059f11f24d47bedeaa18749d01711cddab0bc";
+    };
+    apropos = {
+      url = "github:mlabs-haskell/apropos?ref=t4/ghc9";
+    };
+
+    # empirically discovered required overrides
+    base16-bytestring = {
+      # v1.0.2.0
+      url = "github:haskell/base16-bytestring?rev=0965df6e4e2ed5f5d154fb5b8f83c1a9d9160f9c";
+      flake = false;
+    };
+    cabal-doctest = {
+      url = "github:haskellari/cabal-doctest?ref=v1.0.9-r1";
+      flake = false;
+    };
+    newtype-generics = {
+      url = "github:sjakobi/newtype-generics?ref=v0.6.2";
+      flake = false;
+    };
+    cborg = {
+      # v0.2.7.0
+      url = "github:well-typed/cborg?rev=9df64ff5ecaebe413bdb4f5f571fa66366988722";
+      flake = false;
+    };
+    attoparsec = {
+      url = "github:haskell/attoparsec?ref=0.14.4";
+      flake = false;
+    };
+    th-extras = {
+      url = "github:mokus0/th-extras?ref=v0.0.0.6";
+      flake = false;
+    };
+    generics-sop = {
+      url = "github:well-typed/generics-sop?ref=generics-sop-0.5.1.2";
+      flake = false;
+    };
+    constraints-extras = {
+      url = "github:obsidiansystems/constraints-extras?ref=v0.3.2.1";
+      flake = false;
+    };
+    dependent-sum = {
+      url = "github:obsidiansystems/dependent-sum?ref=dependent-sum-template-0.1.1.1";
+      flake = false;
+    };
+    recursion-schemes = {
+      url = "github:recursion-schemes/recursion-schemes?ref=v5.2.2.2";
+      flake = false;
+    };
+    cassava = {
+      # v0.5.3.0 (pre)
+      url = "github:haskell-hvr/cassava?rev=c821c8366ac4ce4ee3929e315ba37e694ad56f04";
+      flake = false;
+    };
+    semialign = {
+      # v1.2.0.1!
+      url = "github:haskellari/these?rev=6897306f3d87aa8abd45cacaa3b24f5ab1f045a5";
+      flake = false;
+    };
+    deriving-aeson = {
+      # v0.2.8
+      url = "github:fumieval/deriving-aeson?rev=0312ec75c22c26c07a70ce61fc70a7f8f2b0e9cc";
+      flake = false;
+    };
+    quickcheck-instances = {
+      url = "github:haskellari/qc-instances?ref=v0.3.27";
+      flake = false;
+    };
+    charset = {
+      url = "github:ekmett/charset?ref=v0.3.9";
+      flake = false;
+    };
+    cereal = {
+      # v0.5.8.2
+      url = "github:GaloisInc/cereal?rev=b2ee49b1c3d50e5b226c4da0cb7811783ae71e94";
+      flake = false;
+    };
+    vector-th-unbox = {
+      url = "github:tsurucapital/vector-th-unbox?ref=v0.2.2";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, haskell-nix, plutus, flake-compat, flake-compat-ci }:
+  outputs = inputs@{ self, nixpkgs, haskell-nix, flake-compat, flake-compat-ci, ... }:
     let
       supportedSystems = [ "x86_64-linux" ];
 
@@ -21,61 +104,147 @@
 
       nixpkgsFor = system: import nixpkgs { inherit system; overlays = [ haskell-nix.overlay ]; inherit (haskell-nix) config; };
 
-      fourmoluFor = system: (nixpkgsFor system).haskell-nix.tool "ghc8107" "fourmolu" { };
+      fourmoluFor = system: (nixpkgsFor system).haskell-nix.tool "ghc921" "fourmolu" { };
 
       projectFor = system:
         let
           deferPluginErrors = true;
           pkgs = nixpkgsFor system;
-
-          fakeSrc = pkgs.runCommand "real-source" { } ''
-            cp -rT ${self} $out
-            chmod u+w $out/cabal.project
-            cat $out/cabal-haskell.nix.project >> $out/cabal.project
-          '';
         in
         (nixpkgsFor system).haskell-nix.cabalProject' {
-          src = fakeSrc.outPath;
-          compiler-nix-name = "ghc8107";
+          src = ./.;
+          compiler-nix-name = "ghc921";
           cabalProjectFileName = "cabal.project";
-          modules = [{
-            packages = {
-              marlowe.flags.defer-plugin-errors = deferPluginErrors;
-              plutus-use-cases.flags.defer-plugin-errors = deferPluginErrors;
-              plutus-ledger.flags.defer-plugin-errors = deferPluginErrors;
-              plutus-contract.flags.defer-plugin-errors = deferPluginErrors;
-              cardano-crypto-praos.components.library.pkgconfig =
-                nixpkgs.lib.mkForce [ [ (import plutus { inherit system; }).pkgs.libsodium-vrf ] ];
-              cardano-crypto-class.components.library.pkgconfig =
-                nixpkgs.lib.mkForce [ [ (import plutus { inherit system; }).pkgs.libsodium-vrf ] ];
-            };
-          }];
+          modules = [ (inputs.plutarch.haskellModule system) ];
+          extraSources =
+            inputs.plutarch.extraSources ++
+            inputs.apropos.extraSources ++
+            [
+              {
+                src = inputs.plutarch;
+                subdirs = [ "." ];
+              }
+              {
+                src = inputs.apropos;
+                subdirs = [ "." ];
+              }
+              # empirically discovered required overrides
+              {
+                src = inputs.base16-bytestring;
+                subdirs = [ "." ];
+              }
+              {
+                src = inputs.cabal-doctest;
+                subdirs = [ "." ];
+              }
+              {
+                src = inputs.newtype-generics;
+                subdirs = [ "." ];
+              }
+              {
+                src = inputs.cborg;
+                subdirs = [ "./cborg" "serialise" ];
+              }
+              {
+                src = inputs.attoparsec;
+                subdirs = [ "." ];
+              }
+              {
+                src = inputs.th-extras;
+                subdirs = [ "." ];
+              }
+              {
+                src = inputs.generics-sop;
+                subdirs = [ "generics-sop" "sop-core" ];
+              }
+              {
+                src = inputs.constraints-extras;
+                subdirs = [ "." ];
+              }
+              {
+                src = inputs.dependent-sum;
+                subdirs = [ "dependent-sum" "dependent-sum-template" ];
+              }
+              {
+                src = inputs.recursion-schemes;
+                subdirs = [ "." ];
+              }
+              {
+                src = inputs.cassava;
+                subdirs = [ "." ];
+              }
+              {
+                src = inputs.semialign;
+                subdirs = [ "semialign" ];
+              }
+              {
+                src = inputs.deriving-aeson;
+                subdirs = [ "." ];
+              }
+              {
+                src = inputs.quickcheck-instances;
+                subdirs = [ "." ];
+              }
+              {
+                src = inputs.charset;
+                subdirs = [ "." ];
+              }
+              {
+                src = inputs.cereal;
+                subdirs = [ "." ];
+              }
+              {
+                src = inputs.vector-th-unbox;
+                subdirs = [ "." ];
+              }
+            ];
           shell = {
             withHoogle = true;
 
-            tools.haskell-language-server = { };
+            # FIXME: haskell-language-server
+            # tools.haskell-language-server = { };
 
             exactDeps = true;
 
             # We use the ones from Nixpkgs, since they are cached reliably.
             # Eventually we will probably want to build these with haskell.nix.
-            nativeBuildInputs = with pkgs; [ cabal-install hlint (fourmoluFor system) fd haskellPackages.cabal-fmt nixpkgs-fmt coreutils ];
+            nativeBuildInputs = with pkgs; [
+              cabal-install
+              hlint
+              # FIXME: fourmolu
+              # (fourmoluFor system)
+              fd
+              haskellPackages.cabal-fmt
+              nixpkgs-fmt
+              coreutils
+            ];
 
             additional = ps: [
               ps.plutarch
               ps.apropos
+              ps.tasty-hedgehog
+
+              # Overrides required by apropos-tx
+              ps.base16-bytestring
+              ps.cabal-doctest
+              ps.newtype-generics
+              ps.cborg
+              ps.serialise
+              ps.attoparsec
+              ps.th-extras
+              ps.generics-sop
+              ps.constraints-extras
+              ps.dependent-sum-template
+              ps.dependent-sum
+              ps.recursion-schemes
+              ps.cassava
+              ps.semialign
+              ps.deriving-aeson
+              ps.quickcheck-instances
+              ps.charset
+              ps.cereal
+              ps.vector-th-unbox
             ];
-          };
-          sha256map = {
-            "https://github.com/Plutonomicon/plutarch"."ae2059f11f24d47bedeaa18749d01711cddab0bc" = "sha256-DeSwiDyJeI9had5OCxLiGtYeDl07Vic0cR8RETBLY9k=";
-            "https://github.com/mlabs-haskell/apropos"."0ab6bf806475b26b8b6e4743e843b3568711794f" = "sha256-2/chaIMDLHwDzhEPeGclHQ7JomULHhzNAN+QKDVMSvU=";
-            "https://github.com/mlabs-haskell/digraph"."d4dfec22f6a6eb646dcfa9591eaca0a9be88d260" = "sha256-ytQkJ18tYs13rt66s4jdbaGa5mLNEIerF8u24PvyPLA=";
-            "https://github.com/input-output-hk/plutus.git"."3b89c2809933d798cd2ac4c72f932e61b6b35223" = "sha256-IoExCHajsJF96TKz/o2JpALRaBbZC0hxTdqYR528sH0=";
-            "https://github.com/Quid2/flat.git"."ee59880f47ab835dbd73bea0847dab7869fc20d8" = "lRFND+ZnZvAph6ZYkr9wl9VAx41pb3uSFP8Wc7idP9M=";
-            "https://github.com/input-output-hk/cardano-crypto.git"."07397f0e50da97eaa0575d93bee7ac4b2b2576ec" = "oxIOVlgm07FAEmgGRF1C2me9TXqVxQulEOcJ22zpTRs=";
-            "https://github.com/input-output-hk/cardano-base"."78b3928391b558fb1750228f63301ec371f13528" = "pBUTTcenaSLMovHKGsaddJ7Jh3okRTrtu5W7Rdu6RM4=";
-            "https://github.com/input-output-hk/cardano-prelude"."fd773f7a58412131512b9f694ab95653ac430852" = "BtbT5UxOAADvQD4qTPNrGfnjQNgbYNO4EAJwH2ZsTQo=";
-            "https://github.com/input-output-hk/Win32-network"."3825d3abf75f83f406c1f7161883c438dac7277d" = "Hesb5GXSx0IwKSIi42ofisVELcQNX6lwHcoZcbaDiqc=";
           };
         };
       formatCheckFor = system:
