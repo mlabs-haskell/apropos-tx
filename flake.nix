@@ -98,6 +98,89 @@
 
   outputs = inputs@{ self, nixpkgs, haskell-nix, flake-compat, flake-compat-ci, ... }:
     let
+      extraSources =
+        inputs.plutarch.extraSources ++
+        inputs.apropos.extraSources ++
+        [
+          {
+            src = inputs.plutarch;
+            subdirs = [ "." ];
+          }
+          {
+            src = inputs.apropos;
+            subdirs = [ "." ];
+          }
+          # empirically discovered required overrides
+          {
+            src = inputs.base16-bytestring;
+            subdirs = [ "." ];
+          }
+          {
+            src = inputs.cabal-doctest;
+            subdirs = [ "." ];
+          }
+          {
+            src = inputs.newtype-generics;
+            subdirs = [ "." ];
+          }
+          {
+            src = inputs.cborg;
+            subdirs = [ "./cborg" "serialise" ];
+          }
+          {
+            src = inputs.attoparsec;
+            subdirs = [ "." ];
+          }
+          {
+            src = inputs.th-extras;
+            subdirs = [ "." ];
+          }
+          {
+            src = inputs.generics-sop;
+            subdirs = [ "generics-sop" "sop-core" ];
+          }
+          {
+            src = inputs.constraints-extras;
+            subdirs = [ "." ];
+          }
+          {
+            src = inputs.dependent-sum;
+            subdirs = [ "dependent-sum" "dependent-sum-template" ];
+          }
+          {
+            src = inputs.recursion-schemes;
+            subdirs = [ "." ];
+          }
+          {
+            src = inputs.cassava;
+            subdirs = [ "." ];
+          }
+          {
+            src = inputs.semialign;
+            subdirs = [ "semialign" ];
+          }
+          {
+            src = inputs.deriving-aeson;
+            subdirs = [ "." ];
+          }
+          {
+            src = inputs.quickcheck-instances;
+            subdirs = [ "." ];
+          }
+          {
+            src = inputs.charset;
+            subdirs = [ "." ];
+          }
+          {
+            src = inputs.cereal;
+            subdirs = [ "." ];
+          }
+          {
+            src = inputs.vector-th-unbox;
+            subdirs = [ "." ];
+          }
+        ];
+
       supportedSystems = [ "x86_64-linux" ];
 
       perSystem = nixpkgs.lib.genAttrs supportedSystems;
@@ -116,88 +199,7 @@
           compiler-nix-name = "ghc921";
           cabalProjectFileName = "cabal.project";
           modules = [ (inputs.plutarch.haskellModule system) ];
-          extraSources =
-            inputs.plutarch.extraSources ++
-            inputs.apropos.extraSources ++
-            [
-              {
-                src = inputs.plutarch;
-                subdirs = [ "." ];
-              }
-              {
-                src = inputs.apropos;
-                subdirs = [ "." ];
-              }
-              # empirically discovered required overrides
-              {
-                src = inputs.base16-bytestring;
-                subdirs = [ "." ];
-              }
-              {
-                src = inputs.cabal-doctest;
-                subdirs = [ "." ];
-              }
-              {
-                src = inputs.newtype-generics;
-                subdirs = [ "." ];
-              }
-              {
-                src = inputs.cborg;
-                subdirs = [ "./cborg" "serialise" ];
-              }
-              {
-                src = inputs.attoparsec;
-                subdirs = [ "." ];
-              }
-              {
-                src = inputs.th-extras;
-                subdirs = [ "." ];
-              }
-              {
-                src = inputs.generics-sop;
-                subdirs = [ "generics-sop" "sop-core" ];
-              }
-              {
-                src = inputs.constraints-extras;
-                subdirs = [ "." ];
-              }
-              {
-                src = inputs.dependent-sum;
-                subdirs = [ "dependent-sum" "dependent-sum-template" ];
-              }
-              {
-                src = inputs.recursion-schemes;
-                subdirs = [ "." ];
-              }
-              {
-                src = inputs.cassava;
-                subdirs = [ "." ];
-              }
-              {
-                src = inputs.semialign;
-                subdirs = [ "semialign" ];
-              }
-              {
-                src = inputs.deriving-aeson;
-                subdirs = [ "." ];
-              }
-              {
-                src = inputs.quickcheck-instances;
-                subdirs = [ "." ];
-              }
-              {
-                src = inputs.charset;
-                subdirs = [ "." ];
-              }
-              {
-                src = inputs.cereal;
-                subdirs = [ "." ];
-              }
-              {
-                src = inputs.vector-th-unbox;
-                subdirs = [ "." ];
-              }
-            ];
+          extraSources = extraSources;
           shell = {
             withHoogle = true;
 
@@ -265,6 +267,8 @@
         '';
     in
     {
+      inherit extraSources;
+
       project = perSystem projectFor;
       flake = perSystem (system: (projectFor system).flake { });
 
