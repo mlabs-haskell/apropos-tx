@@ -2,9 +2,8 @@
   description = "apropos-tx";
 
   inputs = {
-    haskell-nix.url = "github:mlabs-haskell/haskell.nix";
-    nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
-    haskell-nix.inputs.nixpkgs.follows = "haskell-nix/nixpkgs-2105";
+    haskell-nix.follows = "apropos/haskell-nix";
+    nixpkgs.follows = "apropos/nixpkgs";
     flake-compat-ci.url = "github:hercules-ci/flake-compat-ci";
     flake-compat = {
       url = "github:edolstra/flake-compat";
@@ -198,7 +197,12 @@
           src = ./.;
           compiler-nix-name = "ghc921";
           cabalProjectFileName = "cabal.project";
-          modules = [ (inputs.plutarch.haskellModule system) ];
+          modules = [
+            (inputs.plutarch.haskellModule system)
+            {
+              packages.apropos.ghcOptions = [ "-Wwarn" ];
+            }
+          ];
           extraSources = extraSources;
           shell = {
             withHoogle = true;
@@ -213,8 +217,7 @@
             nativeBuildInputs = with pkgs; [
               cabal-install
               hlint
-              # FIXME: fourmolu
-              # (fourmoluFor system)
+              (fourmoluFor system)
               fd
               haskellPackages.cabal-fmt
               nixpkgs-fmt
