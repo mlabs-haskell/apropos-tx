@@ -12,6 +12,7 @@ module Apropos.ContextBuilder (
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.Trans.State (StateT, execStateT, get, modify)
 import Data.Functor.Identity (Identity, runIdentity)
+import GHC.Generics (Generic)
 import Plutarch.Api.V1 (datumHash)
 import Plutus.V1.Ledger.Api (
   Address,
@@ -37,7 +38,9 @@ import Plutus.V2.Ledger.Api (fromList)
 
 -- Inline datum types
 data TxInInfo' = TxInInfo' TxOutRef TxOut'
+  deriving stock (Eq, Show, Generic)
 data TxOut' = TxOut' Address Value (Maybe Datum)
+  deriving stock (Eq, Show, Generic)
 
 -- with concrete types and extra packaging for convenience
 buildContext :: StateT ScriptContext Identity () -> Context
