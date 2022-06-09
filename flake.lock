@@ -68,11 +68,11 @@
         "these": "these"
       },
       "locked": {
-        "lastModified": 1654779231,
-        "narHash": "sha256-3008ZKRxXrjJYAQhLgLphYKlFTnNWsxWLVTS7VInFH0=",
+        "lastModified": 1654780479,
+        "narHash": "sha256-H4v1sfgH2gbJOmRS6OdSGz+5q+3LvG9gCK3owgPMk/s=",
         "owner": "mlabs-haskell",
         "repo": "apropos",
-        "rev": "9e00d6cd7780bd3598e1c9824bec2cf33cd95807",
+        "rev": "9f8687d094e48d4b19dfa8534476f3f2f7200eb6",
         "type": "github"
       },
       "original": {
