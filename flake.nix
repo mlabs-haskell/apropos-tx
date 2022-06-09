@@ -15,7 +15,7 @@
       url = "github:Plutonomicon/plutarch?rev=ae2059f11f24d47bedeaa18749d01711cddab0bc";
     };
     apropos = {
-      url = "github:mlabs-haskell/apropos?ref=t4/ghc9";
+      url = "github:mlabs-haskell/apropos?ref=ari/debug-basho";
     };
 
     # empirically discovered required overrides
