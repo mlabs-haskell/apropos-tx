@@ -69,16 +69,16 @@
         "these": "these"
       },
       "locked": {
-        "lastModified": 1654187791,
-        "narHash": "sha256-9EKCR/kFCGPu6odlwccxJ2ucsaZ7JPRE60Hl8c1DJtU=",
+        "lastModified": 1654700219,
+        "narHash": "sha256-nm37wjn2yx4XSwuxcHi8+LA2Onazcm9XbzcoRW0+5Zo=",
         "owner": "mlabs-haskell",
         "repo": "apropos",
-        "rev": "8acc6540eb9dd4efcbb4ec83a7e3c667a5e9559d",
+        "rev": "29302a65c70fec23a3430fd4bedd1594992a94cc",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
-        "ref": "t4/ghc9",
+        "ref": "ari/debug-basho",
         "repo": "apropos",
         "type": "github"
       }
