@@ -5,6 +5,7 @@ module Spec.Plutarch.MagicNumber (
 ) where
 
 import Apropos
+import Apropos.LogicalModel
 
 import Data.Set qualified as Set
 
@@ -47,7 +48,7 @@ instance HasLogicalModel MagicNumberProp Script where
 -- There is no randomness here but you could throw some in.
 -- We should probably have a HasParameterisedEnumerator for this.
 -- That would allow us to do exhaustive search of a model.
-instance HasParameterisedGenerator MagicNumberProp Script where
+instance HasParameterisedGenerator (Prop MagicNumberProp) Script where
   parameterisedGenerator s =
     case Set.toList s of
       [HalfWidth i] -> pure $ magicNumber i
@@ -57,7 +58,7 @@ magicNumberPropGenTests :: TestTree
 magicNumberPropGenTests =
   testGroup "Spec.Plutarch.MagicNumber" $
     fromGroup
-      <$> [ enumerateGeneratorTestsWhere @MagicNumberProp
+      <$> [ enumerateGeneratorTestsWhere @(Prop MagicNumberProp)
               "Magic Number Script Generator"
               Yes
           ]
