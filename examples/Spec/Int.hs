@@ -75,7 +75,7 @@ intGenTests =
 intPureRunner :: PureRunner (Prop IntProp) Int
 intPureRunner =
   PureRunner
-    { expect = Var (Prop IsSmall) :&&: Var (Prop IsNegative)
+    { expect = Var IsSmall :&&: Var IsNegative
     , script = \i -> i < 0 && i >= -10
     }
 

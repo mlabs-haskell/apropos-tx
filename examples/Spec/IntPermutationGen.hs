@@ -97,7 +97,7 @@ intPermutationGenTests =
 intPureRunner :: PureRunner (Prop IntProp) Int
 intPureRunner =
   PureRunner
-    { expect = Prop <$> Var IsSmall :&&: Var IsNegative
+    { expect = Var IsSmall :&&: Var IsNegative
     , script = \i -> i < 0 && i >= -10
     }
 
