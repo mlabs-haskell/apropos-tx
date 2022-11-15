@@ -1,3 +1,13 @@
+# This repo has been superseded by [apropos](https://github.com/mlabs-haskell/apropos) and [hedgehog-plutus-simple](https://github.com/mlabs-haskell/hedgehog-plutus-simple)
+
+Some functionality of apropos-tx may not be available in hedgehog-plutus-simple. For example:
+
+- Ability to test memory usage limits
+
+- Ability to simultaneously check script success and resource usage.
+
+If you need these features, please open an issue at hedgehog-plutus-simple.
+
 # `apropos-tx`
 Plutus and Plutarch extensions for [apropos](https://github.com/mlabs-haskell/apropos).
 
